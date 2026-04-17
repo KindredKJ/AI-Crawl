@@ -17,6 +17,8 @@ const DEFAULT_STATE: PlayerState = {
   inventory: {
     weapons: [WEAPONS[0]],
     entities: [ENTITIES[0]],
+    loot: [],
+    materials: {},
   },
   stats: {
     totalKills: 0,
@@ -24,6 +26,7 @@ const DEFAULT_STATE: PlayerState = {
     battlesLost: 0,
     damageDealt: 0,
     damageTaken: 0,
+    totalCaptures: 0,
   },
   unlockedZones: ['SECTOR_1'],
   activeZone: 'SECTOR_1',
@@ -111,13 +114,19 @@ export class GameStateManager {
       : -result.damageTaken;
     const newHp = Math.max(100, Math.min(newMaxHp, s.hp + hpDelta));
 
-    const newInventory = { ...s.inventory };
+    const newInventory = { ...s.inventory, materials: { ...s.inventory.materials } };
     if (result.loot) {
       if ('atk' in result.loot) {
         newInventory.weapons = [...newInventory.weapons, result.loot as Weapon];
       } else {
         newInventory.entities = [...newInventory.entities, result.loot as Entity];
       }
+    }
+    // Add loot materials
+    if (result.lootItems) {
+      result.lootItems.forEach((item: { id: string; quantity: number }) => {
+        newInventory.materials[item.id] = (newInventory.materials[item.id] ?? 0) + item.quantity;
+      });
     }
 
     this.state = {
@@ -135,6 +144,7 @@ export class GameStateManager {
         battlesLost: s.stats.battlesLost + (result.won ? 0 : 1),
         damageDealt: s.stats.damageDealt + result.damageDealt,
         damageTaken: s.stats.damageTaken + result.damageTaken,
+        totalCaptures: (s.stats.totalCaptures ?? 0) + (result.captured ? 1 : 0),
       },
     };
     this.save();
