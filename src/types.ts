@@ -26,7 +26,7 @@ export interface Entity {
   };
 }
 
-export type GameScreen = 'HUB' | 'MAP' | 'COMBAT' | 'REGISTRY';
+export type GameScreen = 'HUB' | 'MAP' | 'COMBAT' | 'REGISTRY' | 'CRAFTING';
 
 // ── Enemy Template (from roster) ─────────────────────────────────────────────
 
@@ -43,6 +43,9 @@ export interface EnemyTemplate {
   baseDef: number;
   abilities: string[];
   captureRate: number;    // 0-1 base chance
+  emoji: string;
+  accentColor: string;
+  bgGradient: string;
   lootTable: string[];    // item IDs
   xpReward: number;
   currencyReward: number;
@@ -108,6 +111,7 @@ export interface PlayerInventory {
   weapons: Weapon[];
   entities: Entity[];
   loot: LootItem[];
+  materials: Record<string, number>;
 }
 
 export interface LootItem {
