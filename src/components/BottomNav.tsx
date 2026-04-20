@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { GameScreen } from '../types';
-import { Home, Map as MapIcon, Sword, BookOpen, Hammer } from 'lucide-react';
+import { Home, Map as MapIcon, Sword, BookOpen, Hammer, ShoppingBag } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface BottomNavProps {
@@ -11,11 +11,11 @@ interface BottomNavProps {
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onScreenChange }) => {
   const navItems = [
-    { id: 'HUB',      icon: Home,     label: 'Hub' },
-    { id: 'MAP',      icon: MapIcon,  label: 'Map' },
-    { id: 'COMBAT',   icon: Sword,    label: 'Combat' },
-    { id: 'CRAFTING', icon: Hammer,   label: 'Craft' },
-    { id: 'REGISTRY', icon: BookOpen, label: 'Registry' },
+    { id: 'HUB',      icon: Home,        label: 'Hub' },
+    { id: 'MAP',      icon: MapIcon,     label: 'Map' },
+    { id: 'COMBAT',   icon: Sword,       label: 'Combat' },
+    { id: 'CRAFTING', icon: Hammer,      label: 'Craft' },
+    { id: 'SHOP',     icon: ShoppingBag, label: 'Store' },
   ] as const;
 
   return (
@@ -25,9 +25,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onScreenChan
         return (
           <button
             key={item.id}
-            onClick={() => onScreenChange(item.id)}
+            onClick={() => onScreenChange(item.id as GameScreen)}
             className={cn(
-              "flex flex-col items-center justify-center transition-all duration-300 px-3 py-2",
+              "flex flex-col items-center justify-center transition-all duration-300 px-3 py-2 relative",
               isActive
                 ? "bg-gradient-to-br from-platinum to-[#15191e] text-[#131313] rounded-full scale-110 shadow-[0_0_15px_rgba(194,199,206,0.3)]"
                 : "text-platinum/50 hover:text-platinum"

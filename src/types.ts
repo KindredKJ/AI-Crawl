@@ -26,7 +26,7 @@ export interface Entity {
   };
 }
 
-export type GameScreen = 'HUB' | 'MAP' | 'COMBAT' | 'REGISTRY' | 'CRAFTING';
+export type GameScreen = 'HUB' | 'MAP' | 'COMBAT' | 'REGISTRY' | 'CRAFTING' | 'SHOP';
 
 // ── Enemy Template (from roster) ─────────────────────────────────────────────
 
