@@ -1,0 +1,6 @@
+rootProject.name = 'AI Crawl'
+include ':app'
+
+// Capacitor plugin projects
+include ':capacitor-android'
+project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
