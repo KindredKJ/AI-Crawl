@@ -1,0 +1,81 @@
+// Top-level build file
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.3.0'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.23'
+    }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'com.neoapps.aicrawl'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.neoapps.aicrawl'
+        minSdk 23           // Android 6.0 — covers 97% of active devices
+        targetSdk 34
+        versionCode 1
+        versionName '1.0.0'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    signingConfigs {
+        release {
+            // These are populated from environment variables during CI
+            // or from local.properties during development
+            storeFile     file(System.getenv('KEYSTORE_PATH')     ?: 'keystore.jks')
+            storePassword System.getenv('KEYSTORE_PASSWORD')      ?: ''
+            keyAlias      System.getenv('KEY_ALIAS')              ?: 'aicrawl'
+            keyPassword   System.getenv('KEY_PASSWORD')           ?: ''
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    // Required for Capacitor WebView
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.capacitorjs:core:6.2.0'
+    implementation 'com.capacitorjs:splash-screen:6.0.2'
+    implementation 'com.capacitorjs:status-bar:6.0.2'
+    implementation 'com.capacitorjs:keyboard:6.0.3'
+    implementation 'com.capacitorjs:haptics:6.0.2'
+    implementation 'com.capacitorjs:app:6.0.2'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.webkit:webkit:1.11.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}
