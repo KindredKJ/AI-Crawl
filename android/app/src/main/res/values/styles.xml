@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark immersive theme — matches game's #131313 background -->
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:background">#131313</item>
+        <item name="colorPrimary">#131313</item>
+        <item name="colorPrimaryDark">#131313</item>
+        <item name="colorAccent">#AFCDC5</item>
+        <!-- Full-screen immersive -->
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+
+    <!-- Splash screen theme -->
+    <style name="AppTheme.Splash" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+</resources>
