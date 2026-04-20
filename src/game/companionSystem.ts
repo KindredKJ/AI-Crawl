@@ -148,6 +148,13 @@ export class CompanionManager {
     this.save();
   }
 
+  loadFromCloud(companions: Companion[], activeId: string | null) {
+    this.companions = companions;
+    this.activeCompanionId = activeId;
+    this.save();
+    this.notify();
+  }
+
   reset() {
     this.companions = [];
     this.activeCompanionId = null;
