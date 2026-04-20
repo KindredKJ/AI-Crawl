@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Crawl</string>
+    <string name="title_activity_main">AI Crawl</string>
+    <string name="package_name">com.neoapps.aicrawl</string>
+    <string name="custom_url_scheme">com.neoapps.aicrawl</string>
+</resources>
