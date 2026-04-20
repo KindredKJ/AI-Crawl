@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { gameState } from '../game/gameState';
+import { cloudSync } from '../game/cloudSync';
 import { companionManager } from '../game/companionSystem';
 import { PlayerState, Companion } from '../types';
 import { Trophy, Target, Zap, Shield, Swords, RotateCcw, Star, TrendingUp, Users, X, Edit3, Check } from 'lucide-react';
@@ -119,7 +120,7 @@ export const RegistryScreen: React.FC = () => {
               <div className="space-y-3">
                 <p className="text-sm text-red-400">This will erase everything. Are you sure?</p>
                 <div className="flex gap-3">
-                  <button onClick={() => { gameState.reset(); companionManager.reset(); setConfirmReset(false); }}
+                  <button onClick={() => { gameState.reset(); companionManager.reset(); cloudSync.deleteCloudSave(); setConfirmReset(false); }}
                     className="px-5 py-2 bg-red-500/20 border border-red-500/40 text-red-400 rounded-full text-sm font-bold">
                     Yes, Reset
                   </button>
