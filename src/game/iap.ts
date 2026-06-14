@@ -6,6 +6,7 @@ import { gameState } from './gameState';
 import { ShopReward } from './shopProducts';
 
 const CHECKOUT_URL = 'https://kindred-492933f1.base44.app/functions/createCheckout';
+const VERIFY_URL = 'https://kindred-492933f1.base44.app/functions/verifyPurchase';
 
 // On web the success page is the same origin + ?purchase_success=1
 // On Capacitor we use the deep-link scheme
@@ -33,7 +34,25 @@ export async function openCheckout(productId: string, userId?: string): Promise<
   }
 }
 
-// ── Apply rewards locally (optimistic — real validation via webhook in prod) ──
+// ── Server-authoritative verification ───────────────────────────────────────
+// Rewards must ONLY be granted after Stripe confirms the session is paid.
+// Never grant rewards from a URL param alone.
+export async function verifyPurchase(sessionId: string): Promise<{ verified: boolean; productId: string | null }> {
+  try {
+    const res = await fetch(VERIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
+    const data = await res.json();
+    return { verified: Boolean(data.verified), productId: data.productId ?? null };
+  } catch (err: any) {
+    console.error('verifyPurchase failed:', err.message);
+    return { verified: false, productId: null };
+  }
+}
+
+// ── Apply rewards locally — ONLY after server verification succeeds ──────────
 // For now we apply immediately on the client after Stripe success redirect.
 // In production you'd verify via a webhook → server → entity update.
 export function applyRewards(rewards: ShopReward[]): string[] {
@@ -110,14 +129,17 @@ export function applyRewards(rewards: ShopReward[]): string[] {
   return messages;
 }
 
-// ── Check URL for purchase success on app load ──────────────────────────────
-export function checkPurchaseReturn(): { productId: string | null; success: boolean } {
+// ── Check URL for purchase return on app load ───────────────────────────────
+// Returns the Stripe session_id so the caller can verify server-side before
+// granting any rewards. A success flag alone is NOT sufficient to fulfill.
+export function checkPurchaseReturn(): { productId: string | null; sessionId: string | null; success: boolean } {
   const params = new URLSearchParams(window.location.search);
-  const success = params.has('purchase_success');
+  const success = params.has('purchase_success') || params.has('session_id');
   const productId = params.get('product_id') ?? null;
-  if (success || productId) {
+  const sessionId = params.get('session_id') ?? null;
+  if (success || productId || sessionId) {
     // Clean URL
     window.history.replaceState({}, '', window.location.pathname);
   }
-  return { productId, success };
+  return { productId, sessionId, success };
 }

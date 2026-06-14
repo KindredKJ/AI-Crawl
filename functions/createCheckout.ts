@@ -4,6 +4,27 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2024-04-10',
 });
 
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allow =
+    ALLOWED_ORIGINS.length === 0
+      ? '*'
+      : origin && ALLOWED_ORIGINS.includes(origin)
+        ? origin
+        : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json',
+    Vary: 'Origin',
+  };
+}
+
 const PRODUCTS: Record<string, { name: string; description: string; amount: number }> = {
   boost_credits_sm:      { name: 'Data Chip',          description: '+1,000 in-game Credits',             amount: 99  },
   boost_capture:         { name: 'Capture Booster',     description: '+50% capture rate for 10 battles',   amount: 99  },
@@ -46,19 +67,22 @@ async function getOrCreatePrice(productId: string): Promise<string> {
 }
 
 Deno.serve(async (req: Request) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Content-Type': 'application/json',
-  };
+  const headers = corsHeaders(req.headers.get('origin'));
 
   if (req.method === 'OPTIONS') return new Response('ok', { headers });
+  if (req.method !== 'POST') {
+    return Response.json({ error: 'Method not allowed' }, { status: 405, headers });
+  }
 
   try {
     const { productId, successUrl, cancelUrl, userId } = await req.json();
 
     if (!productId || !successUrl || !cancelUrl) {
-      return Response.json({ error: 'Missing productId, successUrl, or cancelUrl' }, { status: 400 });
+      return Response.json({ error: 'Missing productId, successUrl, or cancelUrl' }, { status: 400, headers });
+    }
+
+    if (!PRODUCTS[productId]) {
+      return Response.json({ error: 'Unknown product' }, { status: 400, headers });
     }
 
     const priceId = await getOrCreatePrice(productId);
@@ -73,9 +97,9 @@ Deno.serve(async (req: Request) => {
       billing_address_collection: 'auto',
     });
 
-    return Response.json({ url: session.url, sessionId: session.id });
+    return Response.json({ url: session.url, sessionId: session.id }, { headers });
   } catch (err: any) {
     console.error('createCheckout error:', err.message);
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json({ error: err.message }, { status: 500, headers });
   }
 });

@@ -98,3 +98,27 @@ Every new version needs:
 2. Bump `versionName` (semantic version string)
 3. Push to main → CI builds and signs the AAB automatically
 4. Upload new AAB to Play Console → roll out
+
+---
+
+## Payment Security Model (Stripe)
+
+In-app purchases are processed by two backend functions and are **server-verified** before any reward is granted. Never grant entitlements from a client-side URL flag alone.
+
+### Backend functions
+- `functions/createCheckout.ts` — creates a Stripe Checkout session. Idempotently reuses Stripe products/prices via metadata.
+- `functions/verifyPurchase.ts` — verifies a completed session (`payment_status === 'paid'`) and returns the canonical `productId` from Stripe metadata. The client only grants rewards after this returns `verified: true`.
+
+### Required environment variables (backend / Base44 secrets)
+| Variable | Purpose |
+|----------|---------|
+| `STRIPE_SECRET_KEY` | Stripe secret key (`sk_live_...` in production). Stored as a secret, never committed. |
+| `ALLOWED_ORIGINS` | Comma-separated origin allowlist for CORS (e.g. `https://kindred-492933f1.base44.app`). Defaults to `*` only if unset; set it in production. |
+
+### Production hardening checklist
+- [ ] Set `STRIPE_SECRET_KEY` to a live key as a backend secret (not in repo).
+- [ ] Set `ALLOWED_ORIGINS` to your real app origin(s).
+- [ ] (Recommended) Add a Stripe webhook (`checkout.session.completed`) that writes entitlements server-side to the cloud save, so rewards survive even if the client never returns. The current flow verifies on return; a webhook makes it durable.
+- [ ] Reconcile granted entitlements against Stripe sessions periodically.
+
+> Note: client-side `applyRewards` remains optimistic for UX, but is now gated behind `verifyPurchase`. The authoritative source of truth for paid entitlements should be the server/cloud save.

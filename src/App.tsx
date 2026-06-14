@@ -10,7 +10,7 @@ import { CraftingScreen } from './components/CraftingScreen';
 import { ShopScreen } from './components/ShopScreen';
 import { AdDealModal } from './components/AdDealModal';
 import { cloudSync } from './game/cloudSync';
-import { checkPurchaseReturn, applyRewards } from './game/iap';
+import { checkPurchaseReturn, applyRewards, verifyPurchase } from './game/iap';
 import { gameState } from './game/gameState';
 import { AD_DEALS, ALL_PRODUCTS } from './game/shopProducts';
 import { GameScreen } from './types';
@@ -43,17 +43,21 @@ export default function App() {
     initSync();
   }, []);
 
-  // ── Handle Stripe return ──────────────────────────────────────────────────
+  // ── Handle Stripe return (server-verified before granting) ────────────────
   useEffect(() => {
-    const { productId, success } = checkPurchaseReturn();
-    if (success && productId) {
-      const product = ALL_PRODUCTS.find(p => p.id === productId);
+    const { productId, sessionId, success } = checkPurchaseReturn();
+    if (!success || !sessionId) return;
+    (async () => {
+      const { verified, productId: verifiedProductId } = await verifyPurchase(sessionId);
+      if (!verified) return;
+      const resolvedId = verifiedProductId ?? productId;
+      const product = ALL_PRODUCTS.find(p => p.id === resolvedId);
       if (product) {
         const msgs = applyRewards(product.rewards);
         setPurchaseToast(msgs);
         setTimeout(() => setPurchaseToast(null), 6000);
       }
-    }
+    })();
   }, []);
 
   // ── Ad deal trigger — fires after combat battles ──────────────────────────
