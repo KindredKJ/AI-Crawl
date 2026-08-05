@@ -42,3 +42,6 @@ The current application is therefore a **working standalone game prototype**, no
 
 The projection ledger does not claim durable storage, cryptographic integrity, transport authenticity, authorization, telemetry delivery, or a running AI Mind. It never manufactures “live” events. Those require authoritative StrataCast and service integrations.
 
+## Testnet economy follow-up
+
+The repository now contains a test-only MERK contract boundary, deployment receipt, and explicit wallet adapter. It intentionally excludes the proposed profit siphon, scheduled heartbeat, browser-written secret, AI source rewriting, and automatic combat charge. Those patterns violate least privilege, reviewability, truthful economy claims, and the directive's webhook/entitlement launch gates. See `docs/economy/merk-testnet.md` for controls and remaining blockers.

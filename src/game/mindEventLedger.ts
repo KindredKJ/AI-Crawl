@@ -16,7 +16,10 @@ export class MindEventLedger {
   append(event: MindEvent): AppendResult {
     assertMindEvent(event);
     const previous = this.byIdempotencyKey.get(event.idempotencyKey);
-    if (previous) return { status: 'DUPLICATE', event: previous };
+    if (previous) {
+      if (previous.eventId !== event.eventId) throw new Error('idempotency_conflict');
+      return { status: 'DUPLICATE', event: previous };
+    }
 
     const last = this.events.at(-1);
     const expectedSequence = (last?.sequence ?? 0) + 1;
@@ -41,4 +44,3 @@ export class MindEventLedger {
     }
   }
 }
-

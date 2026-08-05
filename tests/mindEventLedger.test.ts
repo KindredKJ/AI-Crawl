@@ -31,10 +31,16 @@ test('appends authoritative events in order and returns an immutable snapshot', 
 test('deduplicates an idempotent retry without advancing sequence', () => {
   const ledger = new MindEventLedger();
   const first = ledger.append(event(1));
-  const retry = ledger.append(event(99, { idempotencyKey: 'key-1' }));
+  const retry = ledger.append(event(99, { eventId: 'evt-1', idempotencyKey: 'key-1' }));
   assert.equal(first.status, 'APPENDED');
   assert.equal(retry.status, 'DUPLICATE');
   assert.equal(ledger.snapshot().length, 1);
+});
+
+test('rejects reuse of an idempotency key for a different event', () => {
+  const ledger = new MindEventLedger();
+  ledger.append(event(1));
+  assert.throws(() => ledger.append(event(2, { idempotencyKey: 'key-1' })), /idempotency_conflict/);
 });
 
 test('rejects sequence gaps and dishonest observation labels', () => {
@@ -55,4 +61,3 @@ test('rolls projections back and permits replay from the rollback boundary', () 
   assert.deepEqual(ledger.snapshot().map(item => item.sequence), [1]);
   assert.equal(ledger.append(event(2)).status, 'APPENDED');
 });
-

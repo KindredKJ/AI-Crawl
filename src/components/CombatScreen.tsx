@@ -65,7 +65,8 @@ export const CombatScreen: React.FC = () => {
         type: b.type as any, tier: Math.ceil(ZONES.indexOf(zoneData!) + 1),
         baseHp: b.maxHp, baseAtk: b.atk, baseDef: b.def,
         abilities: b.abilities, captureRate: 0.05, lootTable: ['fusion_core', 'quantum_core'],
-        xpReward: 400, currencyReward: 300,
+        xpReward: 400, currencyReward: 300, emoji: '☠', accentColor: '#ef4444',
+        bgGradient: 'from-red-950 to-slate-950',
       };
     } else {
       template = getRandomEnemyForLevel(player.level);
