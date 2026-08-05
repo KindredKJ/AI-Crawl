@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "test": "npm run test:unit && npm run test:contracts",
+    "test:unit": "tsx --test tests/*.test.ts",
+    "test:contracts": "hardhat test",
+    "contracts:compile": "hardhat compile",
+    "contracts:deploy:amoy": "hardhat run scripts/deploy.cjs --network amoy",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
@@ -25,9 +30,11 @@
     "@capacitor/status-bar": "^6.0.2",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/utilities": "^3.2.2",
+    "@openzeppelin/contracts": "^5.0.2",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
+    "ethers": "^6.17.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.38.0",
     "react": "^19.0.0",
@@ -37,10 +44,14 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
+    "dotenv": "^16.6.1",
+    "hardhat": "^2.29.0",
+    "solc": "^0.8.24",
     "tailwindcss": "^4.1.14",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.5",
     "typescript": "~5.8.2"
   }
 }

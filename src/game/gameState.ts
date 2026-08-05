@@ -99,6 +99,8 @@ export class GameStateManager {
     damageTaken: number;
     kills: number;
     loot?: Weapon | Entity | null;
+    lootItems?: Array<{ id: string; quantity: number }>;
+    captured?: boolean;
   }) {
     const s = this.state;
     const newXp = s.xp + result.xpGained;
