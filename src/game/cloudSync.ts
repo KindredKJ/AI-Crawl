@@ -20,9 +20,13 @@ function safeStorage(): Storage | undefined {
 }
 
 function readSaveVersion(): number {
-  const raw = safeStorage()?.getItem(SAVE_VERSION_KEY);
-  const version = raw === null || raw === undefined ? 0 : Number.parseInt(raw, 10);
-  return Number.isFinite(version) && version >= 0 ? version : 0;
+  try {
+    const raw = safeStorage()?.getItem(SAVE_VERSION_KEY);
+    const version = raw === null || raw === undefined ? 0 : Number.parseInt(raw, 10);
+    return Number.isFinite(version) && version >= 0 ? version : 0;
+  } catch {
+    return 0;
+  }
 }
 
 function writeSaveVersion(version: number): void {
