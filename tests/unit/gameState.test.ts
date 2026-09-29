@@ -73,7 +73,7 @@ test('applies multiple level ups and persists battle materials once', () => {
   const storage = new MemoryStorage();
   const manager = new GameStateManager(storage);
   const result = manager.applyBattleResult(emptyWin({
-    xpGained: 250,
+    xpGained: 275,
     lootItems: [{ id: 'quantum_core', name: 'Quantum Core', quantity: 2 }],
   }));
   const state = manager.get();
