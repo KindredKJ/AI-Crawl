@@ -1,4 +1,4 @@
-import type { Weapon, Entity, PlayerState, CombatResult } from '../types';
+import type { Weapon, Entity, PlayerState, PlayerInventory, PlayerStats, CombatResult } from '../types';
 import { WEAPONS, ENTITIES } from '../constants';
 
 const STORAGE_KEY = 'ai_crawl_save';
@@ -42,8 +42,8 @@ function finite(value: unknown, fallback: number, min = 0): number {
 
 function sanitizeState(value: unknown): PlayerState {
   const raw = value && typeof value === 'object' ? value as Partial<PlayerState> : {};
-  const inventory = raw.inventory && typeof raw.inventory === 'object' ? raw.inventory : {};
-  const stats = raw.stats && typeof raw.stats === 'object' ? raw.stats : {};
+  const inventory = raw.inventory && typeof raw.inventory === 'object' ? raw.inventory as PlayerInventory : {} as PlayerInventory;
+  const stats = raw.stats && typeof raw.stats === 'object' ? raw.stats as PlayerStats : {} as PlayerStats;
   const merged = {
     ...clone(DEFAULT_STATE),
     ...raw,
