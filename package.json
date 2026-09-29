@@ -13,7 +13,8 @@
     "cap:open": "npx cap open android",
     "cap:run": "npx cap run android",
     "android:build": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease",
-    "android:bundle": "npm run build && npx cap sync android && cd android && ./gradlew bundleRelease"
+    "android:bundle": "npm run build && npx cap sync android && cd android && ./gradlew bundleRelease",
+    "test": "tsx --test tests/unit/*.test.ts"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
