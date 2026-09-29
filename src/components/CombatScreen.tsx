@@ -36,6 +36,14 @@ export const CombatScreen: React.FC = () => {
   } | null>(null);
   const [showAuraEffect, setShowAuraEffect] = useState(false);
   const logsEndRef = useRef<HTMLDivElement>(null);
+  const combatActionLocked = useRef(false);
+  const roundTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (roundTimerRef.current) clearTimeout(roundTimerRef.current);
+    roundTimerRef.current = null;
+    combatActionLocked.current = false;
+  }, []);
 
   useEffect(() => { return gameState.subscribe(setPlayer); }, []);
   useEffect(() => { return companionManager.subscribe(setCompanions); }, []);
@@ -52,6 +60,9 @@ export const CombatScreen: React.FC = () => {
   const activeCompanion = companionManager.getActive();
 
   const startBattle = useCallback((boss: boolean) => {
+    combatActionLocked.current = false;
+    if (roundTimerRef.current) clearTimeout(roundTimerRef.current);
+    roundTimerRef.current = null;
     let template: EnemyTemplate;
     let enemy: Enemy;
 
@@ -104,21 +115,26 @@ export const CombatScreen: React.FC = () => {
   }, [player, zone, activeCompanion]);
 
   const handleAttack = useCallback(() => {
-    if (!battle || !currentEnemy || !currentTemplate || isRunningRound || battle.status !== 'ONGOING') return;
+    if (!battle || !currentEnemy || !currentTemplate || combatActionLocked.current || battle.status !== 'ONGOING') return;
+    combatActionLocked.current = true;
     setIsRunningRound(true);
-    setTimeout(() => {
+    roundTimerRef.current = setTimeout(() => {
+      roundTimerRef.current = null;
       const next = runCombatRound(battle, player, currentEnemy, player.auraActive, activeCompanion);
       setBattle(next);
       if (next.status !== 'ONGOING') finishBattle(next, currentTemplate);
+      combatActionLocked.current = false;
       setIsRunningRound(false);
     }, ROUND_DELAY_MS);
-  }, [battle, currentEnemy, currentTemplate, isRunningRound, player, activeCompanion, finishBattle]);
+  }, [battle, currentEnemy, currentTemplate, player, activeCompanion, finishBattle]);
 
   const handleCapture = useCallback(() => {
-    if (!battle || !currentEnemy || !currentTemplate || isRunningRound || battle.status !== 'ONGOING') return;
+    if (!battle || !currentEnemy || !currentTemplate || combatActionLocked.current || battle.status !== 'ONGOING') return;
+    combatActionLocked.current = true;
     setIsRunningRound(true);
 
-    setTimeout(() => {
+    roundTimerRef.current = setTimeout(() => {
+      roundTimerRef.current = null;
       const hpPct = battle.enemyHp / (currentEnemy.maxHp || 1);
       const result = attemptCapture(currentTemplate, hpPct, player.level);
 
@@ -139,8 +155,9 @@ export const CombatScreen: React.FC = () => {
         // Carry on fighting (enemy now angry)
         setIsRunningRound(false);
       }
+      combatActionLocked.current = false;
     }, ROUND_DELAY_MS);
-  }, [battle, currentEnemy, currentTemplate, isRunningRound, player, finishBattle]);
+  }, [battle, currentEnemy, currentTemplate, player, finishBattle]);
 
   const handleActivateAura = useCallback(() => {
     if (gameState.activateAura()) {
@@ -150,6 +167,10 @@ export const CombatScreen: React.FC = () => {
   }, []);
 
   const handleFlee = useCallback(() => {
+    if (roundTimerRef.current) clearTimeout(roundTimerRef.current);
+    roundTimerRef.current = null;
+    combatActionLocked.current = false;
+    setIsRunningRound(false);
     if (player.auraActive) gameState.deactivateAura(15);
     setBattle(null); setCurrentEnemy(null); setCurrentTemplate(null);
     setPhase('IDLE'); setCaptureMsg(null);
