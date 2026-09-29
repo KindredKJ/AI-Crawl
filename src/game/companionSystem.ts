@@ -34,10 +34,15 @@ export class CompanionManager {
   }
 
   private save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      companions: this.companions,
-      activeId: this.activeCompanionId,
-    }));
+    try {
+      if (typeof globalThis.localStorage === 'undefined') return;
+      globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        companions: this.companions,
+        activeId: this.activeCompanionId,
+      }));
+    } catch {
+      // Companion gameplay remains available if device storage is blocked or full.
+    }
   }
 
   subscribe(fn: (c: Companion[]) => void) {
@@ -46,7 +51,13 @@ export class CompanionManager {
   }
 
   private notify() {
-    this.listeners.forEach(fn => fn([...this.companions]));
+    for (const listener of [...this.listeners]) {
+      try {
+        listener([...this.companions]);
+      } catch (error) {
+        console.error('[Companions] Subscriber failed:', error);
+      }
+    }
   }
 
   getAll(): Companion[] {
