@@ -121,11 +121,17 @@ export const CombatScreen: React.FC = () => {
     setIsRunningRound(true);
     roundTimerRef.current = setTimeout(() => {
       roundTimerRef.current = null;
-      const next = runCombatRound(battle, player, currentEnemy, player.auraActive, activeCompanion);
-      setBattle(next);
-      if (next.status !== 'ONGOING') finishBattle(next, currentTemplate);
-      combatActionLocked.current = false;
-      setIsRunningRound(false);
+      try {
+        const next = runCombatRound(battle, player, currentEnemy, player.auraActive, activeCompanion);
+        setBattle(next);
+        if (next.status !== 'ONGOING') finishBattle(next, currentTemplate);
+      } catch (error) {
+        console.error('[Combat] Attack turn failed safely:', error);
+        setCaptureMsg('Action interrupted. Your saved profile is intact; retry or retreat.');
+      } finally {
+        combatActionLocked.current = false;
+        setIsRunningRound(false);
+      }
     }, ROUND_DELAY_MS);
   }, [battle, currentEnemy, currentTemplate, player, activeCompanion, finishBattle]);
 
@@ -136,6 +142,7 @@ export const CombatScreen: React.FC = () => {
 
     roundTimerRef.current = setTimeout(() => {
       roundTimerRef.current = null;
+      try {
       const hpPct = battle.enemyHp / (currentEnemy.maxHp || 1);
       const result = attemptCapture(currentTemplate, hpPct, player.level);
 
@@ -156,7 +163,13 @@ export const CombatScreen: React.FC = () => {
         // Carry on fighting (enemy now angry)
         setIsRunningRound(false);
       }
-      combatActionLocked.current = false;
+      } catch (error) {
+        console.error('[Combat] Capture turn failed safely:', error);
+        setCaptureMsg('Action interrupted. Your saved profile is intact; retry or retreat.');
+      } finally {
+        combatActionLocked.current = false;
+        setIsRunningRound(false);
+      }
     }, ROUND_DELAY_MS);
   }, [battle, currentEnemy, currentTemplate, player, finishBattle]);
 
@@ -357,6 +370,7 @@ export const CombatScreen: React.FC = () => {
             ))}
             <div ref={logsEndRef} />
           </div>
+          {captureMsg && <div role="status" aria-live="polite" className="text-center text-sm text-gold">{captureMsg}</div>}
 
           {/* Action Buttons */}
           <div className="grid grid-cols-3 gap-2">
