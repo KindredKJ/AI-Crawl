@@ -11,6 +11,32 @@ const SYNC_URL = 'https://kindred-492933f1.base44.app/functions/syncSave';
 const DEBOUNCE_MS = 4000;    // wait 4s after last change before syncing
 const SAVE_VERSION_KEY = 'ai_crawl_save_version';
 
+function safeStorage(): Storage | undefined {
+  try {
+    return typeof globalThis.localStorage === 'undefined' ? undefined : globalThis.localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
+function readSaveVersion(): number {
+  try {
+    const raw = safeStorage()?.getItem(SAVE_VERSION_KEY);
+    const version = raw === null || raw === undefined ? 0 : Number.parseInt(raw, 10);
+    return Number.isFinite(version) && version >= 0 ? version : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeSaveVersion(version: number): void {
+  try {
+    safeStorage()?.setItem(SAVE_VERSION_KEY, String(version));
+  } catch {
+    // Cloud remains usable when local browser storage is disabled or full.
+  }
+}
+
 type SyncStatus = 'idle' | 'syncing' | 'saved' | 'error' | 'offline' | 'conflict';
 
 class CloudSync {
@@ -24,7 +50,7 @@ class CloudSync {
   // Call this once from App with the Base44 auth token
   async init(token: string | null) {
     this.authToken = token;
-    this.saveVersion = parseInt(localStorage.getItem(SAVE_VERSION_KEY) ?? '0', 10);
+    this.saveVersion = readSaveVersion();
 
     if (!token) {
       this.setStatus('offline');
@@ -37,14 +63,14 @@ class CloudSync {
       const res = await this.call({ action: 'load' });
 
       if (res.found) {
-        const localVersion = parseInt(localStorage.getItem(SAVE_VERSION_KEY) ?? '0', 10);
+        const localVersion = readSaveVersion();
         // Cloud is newer — load it
         if ((res.saveVersion ?? 0) > localVersion) {
           console.log('[CloudSync] Loading cloud save (version', res.saveVersion, '> local', localVersion, ')');
           gameState.update(res.playerState);
           companionManager.loadFromCloud(res.companions ?? [], res.activeCompanionId ?? null);
           this.saveVersion = res.saveVersion;
-          localStorage.setItem(SAVE_VERSION_KEY, String(this.saveVersion));
+          writeSaveVersion(this.saveVersion);
         } else {
           console.log('[CloudSync] Local save is current, pushing to cloud');
           await this.pushNow();
@@ -60,10 +86,12 @@ class CloudSync {
       this.setStatus('error');
     }
 
-    // Subscribe to state changes → debounced auto-save
-    gameState.subscribe(() => this.scheduleSave());
-    companionManager.subscribe(() => this.scheduleSave());
-    this.initialized = true;
+    // Subscribe once: repeated auth refreshes must not multiply cloud writes.
+    if (!this.initialized) {
+      gameState.subscribe(() => this.scheduleSave());
+      companionManager.subscribe(() => this.scheduleSave());
+      this.initialized = true;
+    }
   }
 
   private scheduleSave() {
@@ -77,7 +105,7 @@ class CloudSync {
     try {
       this.setStatus('syncing');
       this.saveVersion += 1;
-      localStorage.setItem(SAVE_VERSION_KEY, String(this.saveVersion));
+      writeSaveVersion(this.saveVersion);
 
       const player = gameState.get();
       const companions = companionManager.getAll();
@@ -97,7 +125,7 @@ class CloudSync {
         gameState.update(res.playerState);
         companionManager.loadFromCloud(res.companions ?? [], res.activeCompanionId ?? null);
         this.saveVersion = res.cloudVersion;
-        localStorage.setItem(SAVE_VERSION_KEY, String(this.saveVersion));
+        writeSaveVersion(this.saveVersion);
         this.setStatus('conflict');
         setTimeout(() => this.setStatus('saved'), 2000);
       } else {
@@ -112,7 +140,7 @@ class CloudSync {
     if (!this.authToken) return;
     await this.call({ action: 'delete' });
     this.saveVersion = 0;
-    localStorage.setItem(SAVE_VERSION_KEY, '0');
+    writeSaveVersion(0);
   }
 
   private async call(body: object): Promise<any> {
