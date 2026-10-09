@@ -38,6 +38,23 @@ describe('MERK economy', function () {
     expect(await token.balanceOf(treasury.address) - before).to.equal(ethers.parseEther('9.9'));
   });
 
+
+  it('does not let public floor entry preempt a privileged loot command', async function () {
+    const { owner, player, token, dungeon } = await fixture();
+    const id = ethers.id('public-may-know-owner-command');
+    await dungeon.connect(owner).configureFloor(1, ethers.parseEther('1'), true, 'ipfs://floor-1');
+    await token.connect(owner).transfer(player.address, ethers.parseEther('10'));
+    await token.connect(player).approve(await dungeon.getAddress(), ethers.parseEther('1'));
+    await dungeon.connect(player).enterFloor(1, id);
+    // Exact same raw command ID belongs to a different action and identity.
+    await expect(dungeon.connect(owner).dropLoot(player.address, 7, 1, id))
+      .to.emit(dungeon, 'LootDropped');
+    await expect(dungeon.connect(owner).dropLoot(player.address, 7, 1, id))
+      .to.be.revertedWithCustomError(dungeon, 'DuplicateCommand');
+    await expect(dungeon.connect(player).enterFloor(1, id))
+      .to.be.revertedWithCustomError(dungeon, 'DuplicateCommand');
+  });
+
   it('enforces idempotent commands and emergency pause', async function () {
     const { owner, player, dungeon } = await fixture();
     const command = ethers.id('loot-1');
