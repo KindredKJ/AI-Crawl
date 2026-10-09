@@ -23,3 +23,12 @@ test('rejects the retired Mumbai chain and malformed addresses', () => {
   }), false);
 });
 
+
+test('fails closed for absent and malformed nested deployment receipts', () => {
+  assert.equal(validateDeployment(null), false);
+  assert.equal(validateDeployment({}), false);
+  assert.equal(validateDeployment({ ...deployment, contracts: null }), false);
+  assert.equal(validateDeployment({ ...deployment, contracts: [] }), false);
+  assert.equal(validateDeployment({ ...deployment, contracts: { merkToken: 5 } }), false);
+  assert.equal(validateDeployment({ ...deployment, contracts: { ...deployment.contracts, merkDungeon: null } }), false);
+});
