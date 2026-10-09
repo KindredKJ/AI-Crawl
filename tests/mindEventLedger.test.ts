@@ -37,6 +37,22 @@ test('deduplicates an idempotent retry without advancing sequence', () => {
   assert.equal(ledger.snapshot().length, 1);
 });
 
+test('deduplicates identical retry envelopes with reordered JSON object keys', () => {
+  const ledger = new MindEventLedger({ tenantId: 'tenant-kindred', worldId: 'world-genesis', sessionId: 'session-1', mindId: 'mind-genesis-1' });
+  const first = event(1);
+  ledger.append(first);
+  const reordered = Object.fromEntries(
+    Object.entries(first).reverse().map(([key, value]) => {
+      if (key === 'payload' || key === 'provenance') {
+        return [key, Object.fromEntries(Object.entries(value).reverse())];
+      }
+      return [key, value];
+    }),
+  ) as unknown as MindEvent;
+  assert.equal(ledger.append(reordered).status, 'DUPLICATE');
+  assert.equal(ledger.snapshot().length, 1);
+});
+
 test('rejects reuse of an idempotency key for a different event', () => {
   const ledger = new MindEventLedger({ tenantId: 'tenant-kindred', worldId: 'world-genesis', sessionId: 'session-1', mindId: 'mind-genesis-1' });
   ledger.append(event(1));
