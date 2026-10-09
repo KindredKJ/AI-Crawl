@@ -42,3 +42,11 @@
 Shroud’s actual fluid microstructure simulation; Dead Eye targeting; Seraph Drive movement; Covenant Sight perception/material effects; Iron Psalm ballistic upgrades; Strata Walk navigation; Judgment; Host Channel; massive destruction/physics; companion independent agency; AI-driven tactics with signed input policy; mounted controls; dialog voice acting; procedural biomes; otherworldly visual/audio language; new campaigns II–VI, including the Last Contract and origin revelation; real Unreal shipping build.
 
 **Production status:** Source-level campaign engine and browser tactical interactions only. Native game build, art/animation, performance QA, deployment, and verified multiplayer remain release blockers. Preserve the existing `StrataCast` and `AI Crawl` source responsibilities.
+
+## Addendum: tactical Wave combat delivered in this implementation
+
+- `src/game/covenantDustCombat.ts` implements a pure tactical turn system. The incoming attack is telegraphed; the player's Shroud energy, revolver ammunition, cover integrity and HP change according to the selected defense/strike.
+- Shroud Block, Shroud Redirect, Revolver, Dead Eye, Dodge, Take Cover and Rider Evasion have distinct effects and prerequisites. Combat ends in ROUTED, SURVIVED after five defended rounds, or FALLEN; it cannot be declared as a browser victory before the tactical battle resolves.
+- The browser Story panel now runs those turns. Its wave resolution button appears only after actual **local** survival or routing. Failing a round allows a local retry; no signed competitive, blockchain, or paid entitlement is created.
+- `tests/unit/covenantDustCombat.test.ts` verifies ammunition, Shroud depletion, ability gates, mounted movement, turn-based survival and deterministic replay.
+- Local battle state is currently ephemeral to the Story screen and is not synchronized to StrataCast networking or saved as server receipts. This is a production integration gap, not a claim of a complete native combat game.
