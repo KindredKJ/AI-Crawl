@@ -17,11 +17,18 @@ export type EntryResult =
   | { status: 'CONFIRMED'; transactionHash: string }
   | { status: 'UNAVAILABLE'; reason: 'NO_WALLET' | 'WRONG_NETWORK' | 'INVALID_DEPLOYMENT' | 'FLOOR_DISABLED' };
 
-export function validateDeployment(value: MerkDeployment): boolean {
-  return value.schemaVersion === 'aicrawl.deployment/v1'
-    && value.chainId === AMOY_CHAIN_ID
-    && isAddress(value.contracts.merkToken)
-    && isAddress(value.contracts.merkDungeon);
+export function validateDeployment(value: unknown): value is MerkDeployment {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  const contracts = record.contracts;
+  if (typeof contracts !== 'object' || contracts === null || Array.isArray(contracts)) return false;
+  const addresses = contracts as Record<string, unknown>;
+  return record.schemaVersion === 'aicrawl.deployment/v1'
+    && record.chainId === AMOY_CHAIN_ID
+    && typeof addresses.merkToken === 'string'
+    && typeof addresses.merkDungeon === 'string'
+    && isAddress(addresses.merkToken)
+    && isAddress(addresses.merkDungeon);
 }
 
 /** Wallet transactions are explicit user actions; combat never implies payment. */
