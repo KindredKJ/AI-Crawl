@@ -1,0 +1,273 @@
+{
+  "schemaVersion": "covenant.dust/v1",
+  "title": "COVENANT//DUST",
+  "franchise": "AI Crawl",
+  "engine": "StrataCast",
+  "nativeClient": "Unreal Engine 5.8",
+  "canonicalPolicy": "This is fictional narrative gameplay content. All external effects remain deny-by-default.",
+  "player": {
+    "publicTitle": "THE GUNSLINGER",
+    "trueNameRevealed": false,
+    "identity": "Biomechanically reconstructed Covenant Rider",
+    "fantasy": "THE MONSTERS PICKED THE WRONG PERSON",
+    "progression": "discover latent capabilities"
+  },
+  "world": {
+    "theme": "frontier, autonomous systems, supernatural authority",
+    "adversary": "THE ADVERSARY NETWORK",
+    "counterforce": "THE HOST",
+    "enemyGoal": "THE LAST CONTRACT",
+    "hostMysteryMustRemain": true,
+    "initialMap": "THE DEAD SKY",
+    "settlement": "MERCY'S END"
+  },
+  "sixCampaignPhases": [
+    {
+      "phase": 1,
+      "id": "FRONTIER",
+      "scale": "local settlements, bounties, first Black Covenants"
+    },
+    {
+      "phase": 2,
+      "id": "TERRITORIES",
+      "scale": "contested regions, railways, datacenters, megastructures"
+    },
+    {
+      "phase": 3,
+      "id": "THE MACHINE WAR",
+      "scale": "autonomous factories and corrupted robotic armies"
+    },
+    {
+      "phase": 4,
+      "id": "THE SKIES OPEN",
+      "scale": "mass aerial battles, the Host becomes partly visible"
+    },
+    {
+      "phase": 5,
+      "id": "THE LAST CONTRACT",
+      "scale": "billions of digital agreements converge"
+    },
+    {
+      "phase": 6,
+      "id": "REVELATION",
+      "scale": "Gunslinger origin and conflicting sides are revealed"
+    }
+  ],
+  "waveSequence": [
+    "CONTACT",
+    "COMBINATION",
+    "ENVIRONMENTAL_FAILURE",
+    "HEAVY_ENTITY",
+    "REALITY_BREACH",
+    "SWARM",
+    "COMMANDER",
+    "COVENANT_EVENT",
+    "OVERWHELM",
+    "AWAKENING"
+  ],
+  "rarity": [
+    "COMMON",
+    "UNCOMMON",
+    "RARE",
+    "EPIC",
+    "LEGENDARY",
+    "OTHERWORLDLY"
+  ],
+  "capabilityFamilies": [
+    {
+      "family": "SHROUD",
+      "intent": "deflection, shielding, redirect, stealth, aerial control",
+      "unlocks": "first airborne combat"
+    },
+    {
+      "family": "DEAD_EYE",
+      "intent": "ballistic prediction and targeting",
+      "unlocks": "first latent precision shot"
+    },
+    {
+      "family": "SERAPH_DRIVE",
+      "intent": "biomechanical acceleration",
+      "unlocks": "later stress revelation"
+    },
+    {
+      "family": "COVENANT_SIGHT",
+      "intent": "identify hidden contracts and corruption",
+      "unlocks": "Mercy's End contract analysis"
+    },
+    {
+      "family": "IRON_PSALM",
+      "intent": "weapon enhancement",
+      "unlocks": "later narrative pressure"
+    },
+    {
+      "family": "STRATA_WALK",
+      "intent": "altered machine-network traversal",
+      "unlocks": "later narrative pressure"
+    },
+    {
+      "family": "JUDGMENT",
+      "intent": "structural weaknesses",
+      "unlocks": "later narrative pressure"
+    },
+    {
+      "family": "RIDER_LINK",
+      "intent": "intelligent mounts and machinery",
+      "unlocks": "horse mount"
+    },
+    {
+      "family": "HOST_CHANNEL",
+      "intent": "limited dangerous Host interaction",
+      "unlocks": "later campaign revelation"
+    }
+  ],
+  "stages": [
+    {
+      "id": "DEAD_SKY",
+      "wave": 0,
+      "opening": "BLACK; six-chamber revolver click; the Gunslinger falls over red mesas, derelict mines, solar farms, old churches, satellites and floating landmasses",
+      "play": "aerial Wraith swarm attack; Shroud block and redirection; revolver, air dash and midair melee",
+      "encounter": {
+        "archetypes": [
+          "WRAITH"
+        ],
+        "boss": "DUST TITAN",
+        "bossRarity": "EPIC",
+        "titanCount": 3
+      },
+      "winCondition": "survive, trigger Titan emergence, never require killing all Titans"
+    },
+    {
+      "id": "COLLAPSE_RUN",
+      "wave": 0,
+      "play": "mount ENTITY UNKNOWN horse, traverse collapsing mesas, bridges, railways, Titan footsteps and shattered arch",
+      "winCondition": "reach the archway",
+      "mystery": "the Titan forehead symbol matches the Gunslinger mechanical arm"
+    },
+    {
+      "id": "MERCYS_END",
+      "waveFrom": 1,
+      "waveTo": 10,
+      "play": "investigate village and compromised data center, dialog, tactics and local enemy escalation",
+      "clues": [
+        "RADIO_VOICES",
+        "MISSING_THIRTEEN_SECONDS",
+        "KNEELING_ROBOTS",
+        "OWNERSHIP_REWRITE"
+      ],
+      "rule": "hidden Black Covenant in ownership controls; expose before wave-10 finale"
+    },
+    {
+      "id": "THE_NOTARY",
+      "rarity": "LEGENDARY",
+      "bossMechanic": "temporary property claims make world geometry hostile; break authority seals, not HP only",
+      "bossPhases": [
+        "PROPERTY_CLAIM",
+        "BINDING_CHAINS",
+        "OWNERSHIP_SEAL"
+      ],
+      "reward": "First StrataKey"
+    },
+    {
+      "id": "FIRST_COVENANT_ENDING",
+      "cinematic": "brief peace; every dead screen activates; worldwide Covenant lines appear",
+      "reveal": [
+        "Congratulations.",
+        "You stopped one contract.",
+        "We only needed humanity to sign once.",
+        "Ride fast."
+      ],
+      "system": [
+        "GLOBAL COVENANT CONVERGENCE DETECTED",
+        "EXECUTION PROGRESS: 1%"
+      ],
+      "nextCampaign": "THE MACHINE WAR"
+    }
+  ],
+  "enemyArchetypes": [
+    {
+      "id": "WRAITH",
+      "rarity": "UNCOMMON",
+      "behavior": "blink aerial crossfire, uncanny overlapping human-expression masks",
+      "modelRole": "biomechanical flight rig"
+    },
+    {
+      "id": "DUST_TITAN",
+      "rarity": "EPIC",
+      "behavior": "30m siege, structural demolition and corrupted antenna signals",
+      "modelRole": "troll/stone/machine"
+    },
+    {
+      "id": "COVENANT_HOUND",
+      "rarity": "RARE",
+      "behavior": "tracking corrupted machines",
+      "modelRole": "proposed adaptive enemy archetype"
+    },
+    {
+      "id": "SEAL_CONSTRUCT",
+      "rarity": "RARE",
+      "behavior": "territory claiming",
+      "modelRole": "proposed adaptive enemy archetype"
+    },
+    {
+      "id": "NOTARY",
+      "rarity": "LEGENDARY",
+      "behavior": "binding chains, contract seals, ability restrictions and environment ownership",
+      "modelRole": "boss"
+    }
+  ],
+  "allies": [
+    {
+      "id": "THE ENGINEER",
+      "role": "software supernatural structures and hostile-machine rewrites"
+    },
+    {
+      "id": "THE PREACHER",
+      "role": "former outlaw with bell-electromagnetic weapon, knows covenant law"
+    },
+    {
+      "id": "THE CHILD",
+      "role": "distributed synthetic intelligence inhabiting many machines"
+    },
+    {
+      "id": "THE MARSHAL",
+      "role": "human lawman pursuing suppressed anomalies"
+    },
+    {
+      "id": "THE MACHINE",
+      "role": "failed-possession former adversary robot"
+    }
+  ],
+  "mysteries": [
+    "Who rebuilt the Gunslinger?",
+    "Why was his memory erased?",
+    "Why do his technologies predate their alleged invention?",
+    "Who created the Shroud?",
+    "Why do the Host recognize him?",
+    "Why does the horse recognize him?",
+    "Why does the Adversary order DO NOT KILL THE RIDER?",
+    "Was he built by the enemy?"
+  ],
+  "futureSignatureEncounters": [
+    "horseride across collapsing floating mesas",
+    "Wraith duel inside tornado",
+    "impossible-dimension saloon shootout",
+    "train defense against crawling demon-machine",
+    "possessed data center as nested reality",
+    "enemy rewrites mission objectives",
+    "hundreds of allied machines in battle",
+    "freefall from ruined sky fortress",
+    "climb a live Titan in combat",
+    "possessed gunslinger high-noon duel",
+    "nighttime siege by thousands",
+    "first Host manifestation",
+    "buried technological city",
+    "terrain used as ammunition",
+    "ride into Last Contract manifestation"
+  ],
+  "authorityBoundary": {
+    "trustedWorldKernelOnly": true,
+    "localCampaignStateNotTrustedForRewards": true,
+    "cinematicsNeedRealUnrealAssets": true,
+    "publicationRequiresConsent": true
+  }
+}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { GameScreen } from '../types';
-import { Home, Map as MapIcon, Sword, BookOpen, Hammer, ShoppingBag, Gem } from 'lucide-react';
+import { Home, Map as MapIcon, Sword, BookOpen, Hammer, ShoppingBag, Gem, ScrollText } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface BottomNavProps {
@@ -17,10 +17,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onScreenChan
     { id: 'CRAFTING', icon: Hammer,      label: 'Craft' },
     { id: 'SHOP',     icon: ShoppingBag, label: 'Store' },
     { id: 'KINFT',    icon: Gem,        label: 'KINFT' },
+    { id: 'CAMPAIGN', icon: ScrollText, label: 'Story' },
   ] as const;
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-[#131313]/90 backdrop-blur-2xl rounded-t-[3rem] shadow-[0_-8px_32px_rgba(229,226,225,0.05)]">
+    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center gap-1 px-3 pb-6 pt-3 bg-[#131313]/90 backdrop-blur-2xl rounded-t-[3rem] shadow-[0_-8px_32px_rgba(229,226,225,0.05)] overflow-x-auto">
       {navItems.map((item) => {
         const isActive = activeScreen === item.id;
         return (
