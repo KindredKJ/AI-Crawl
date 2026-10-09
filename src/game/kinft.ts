@@ -164,7 +164,7 @@ export class KINFTVault {
   get(): KINFTSnapshot { return clone(this.data); }
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    return () => { this.listeners.delete(listener); };
   }
   private persist(): void {
     try { this.storage?.setItem(STORAGE_KEY, JSON.stringify(this.data)); }
