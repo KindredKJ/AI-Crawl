@@ -88,21 +88,21 @@ export interface KINFTCollectible {
 }
 export interface KINFTUserPreferences {
   shroudPalette: 'OBSIDIAN' | 'EMBER' | 'SERAPH' | 'VOID';
-  combatStance: 'PRECISION' | 'ONSLAUGHT' | 'GUARDIAN';
+  combatStance: 'BALANCED' | 'PRECISION' | 'ONSLAUGHT' | 'GUARDIAN';
   cameraShake: 'OFF' | 'SUBTLE' | 'CINEMATIC';
   presentation: 'IMMERSIVE' | 'TACTICAL' | 'ACCESSIBLE';
   effects: 'PERFORMANCE' | 'BALANCED' | 'CINEMATIC';
 }
 export const DEFAULT_KINFT_PREFERENCES: Readonly<KINFTUserPreferences> = {
   shroudPalette: 'OBSIDIAN',
-  combatStance: 'PRECISION',
+  combatStance: 'BALANCED',
   cameraShake: 'SUBTLE',
   presentation: 'IMMERSIVE',
   effects: 'BALANCED',
 };
 const PREFERENCE_OPTIONS: { [K in keyof KINFTUserPreferences]: readonly KINFTUserPreferences[K][] } = {
   shroudPalette: ['OBSIDIAN', 'EMBER', 'SERAPH', 'VOID'],
-  combatStance: ['PRECISION', 'ONSLAUGHT', 'GUARDIAN'],
+  combatStance: ['BALANCED', 'PRECISION', 'ONSLAUGHT', 'GUARDIAN'],
   cameraShake: ['OFF', 'SUBTLE', 'CINEMATIC'],
   presentation: ['IMMERSIVE', 'TACTICAL', 'ACCESSIBLE'],
   effects: ['PERFORMANCE', 'BALANCED', 'CINEMATIC'],
@@ -204,7 +204,9 @@ export class KINFTVault {
   private persist(): void {
     try { this.storage?.setItem(STORAGE_KEY, JSON.stringify(this.data)); }
     catch { /* usable local progress even when browser storage is restricted */ }
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners) {
+      try { listener(); } catch (error) { console.error('[KINFT] Vault subscriber failed:', error); }
+    }
   }
   awardVictory(result: KINFTVictory): KINFTRewardResult {
     if (!result.won || !validEvent(result.eventId) || !validEvent(result.encounterId)
@@ -221,7 +223,7 @@ export class KINFTVault {
       ? `boss-first-clear:${result.encounterId}`
       : result.totalWins % 5 === 0 ? `fifth-victory:${result.totalWins}` : null;
     let newItem: KINFTCollectible | null = null;
-    if (rewardEvent && !this.data.claimedEvents.includes(rewardEvent)) {
+    if (rewardEvent && !this.data.items.some(item => item.acquiredFrom === rewardEvent)) {
       this.data.claimedEvents.push(rewardEvent);
       const types: KINFTKind[] = ['SKILL', 'GEAR', 'WEAPON', 'COMPANION', 'POWER', 'CHARACTER'];
       const kind = result.boss
