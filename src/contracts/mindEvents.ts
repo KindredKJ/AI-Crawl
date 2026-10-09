@@ -66,7 +66,7 @@ export function assertMindEvent(value: unknown): asserts value is MindEvent {
   if (e.schemaVersion !== MIND_EVENT_SCHEMA) throw new Error('unsupported_schema');
   requireString(e.eventId, 'missing_event_identity');
   requireString(e.idempotencyKey, 'missing_event_identity');
-  if (!Number.isSafeInteger(e.sequence) || (e.sequence as number) < 1) {
+  if (typeof e.sequence !== 'number' || !Number.isSafeInteger(e.sequence) || e.sequence < 1) {
     throw new Error('invalid_sequence');
   }
   if (!nonEmpty(e.occurredAt) || !Number.isFinite(Date.parse(e.occurredAt))) {
