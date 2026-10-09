@@ -25,7 +25,9 @@ test('Shroud redirection consumes energy and damages an actual local threat',()=
  assert.equal(b.shroudEnergy,2);
  assert.equal(b.enemyHP,a.enemyHP-32);
  assert.equal(b.turn,1);
- assert.throws(()=>takeWaveTurn(b,'SHROUD_REDIRECT',['SHROUD'],true),WaveCombatError);
+ const c=takeWaveTurn(b,'SHROUD_REDIRECT',['SHROUD'],true);
+ assert.equal(c.shroudEnergy,0);
+ assert.throws(()=>takeWaveTurn(c,'SHROUD_REDIRECT',['SHROUD'],true),WaveCombatError);
 });
 test('Dead Eye requires awakening and a loaded revolver',()=>{
  const b=beginWaveCombat(encounter(town()));
