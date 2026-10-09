@@ -86,12 +86,34 @@ export interface KINFTCollectible {
   acquiredAt: string;
   state: 'LOCAL_REWARD_UNVERIFIED';
 }
+export interface KINFTUserPreferences {
+  shroudPalette: 'OBSIDIAN' | 'EMBER' | 'SERAPH' | 'VOID';
+  combatStance: 'PRECISION' | 'ONSLAUGHT' | 'GUARDIAN';
+  cameraShake: 'OFF' | 'SUBTLE' | 'CINEMATIC';
+  presentation: 'IMMERSIVE' | 'TACTICAL' | 'ACCESSIBLE';
+  effects: 'PERFORMANCE' | 'BALANCED' | 'CINEMATIC';
+}
+export const DEFAULT_KINFT_PREFERENCES: Readonly<KINFTUserPreferences> = {
+  shroudPalette: 'OBSIDIAN',
+  combatStance: 'PRECISION',
+  cameraShake: 'SUBTLE',
+  presentation: 'IMMERSIVE',
+  effects: 'BALANCED',
+};
+const PREFERENCE_OPTIONS: { [K in keyof KINFTUserPreferences]: readonly KINFTUserPreferences[K][] } = {
+  shroudPalette: ['OBSIDIAN', 'EMBER', 'SERAPH', 'VOID'],
+  combatStance: ['PRECISION', 'ONSLAUGHT', 'GUARDIAN'],
+  cameraShake: ['OFF', 'SUBTLE', 'CINEMATIC'],
+  presentation: ['IMMERSIVE', 'TACTICAL', 'ACCESSIBLE'],
+  effects: ['PERFORMANCE', 'BALANCED', 'CINEMATIC'],
+};
 export interface KINFTSnapshot {
   schemaVersion: 1;
   items: KINFTCollectible[];
   claimedEvents: string[];
   equipped: Partial<Record<KINFTKind, string>>;
   essence: number;
+  customization: KINFTUserPreferences;
 }
 export interface KINFTVictory {
   eventId: string;
@@ -114,7 +136,7 @@ function defaultStorage(): StoragePort | undefined {
 }
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
 function emptySnapshot(): KINFTSnapshot {
-  return { schemaVersion: 1, items: [], claimedEvents: [], equipped: {}, essence: 0 };
+  return { schemaVersion: 1, items: [], claimedEvents: [], equipped: {}, essence: 0, customization: { ...DEFAULT_KINFT_PREFERENCES } };
 }
 function validEvent(value: string): boolean {
   return typeof value === 'string' && value.length > 0 && value.length <= 160 && /^[A-Za-z0-9._:-]+$/.test(value);
@@ -127,6 +149,18 @@ function weightedDefinition(eventId: string, playerLevel: number, boss: boolean,
   const candidates = options.filter(def => rarityIndex(def.rarity) <= band);
   const pool = candidates.length > 0 ? candidates : options.length > 0 ? options : KINFT_CATALOG.filter(def => def.requiredPlayerLevel <= playerLevel);
   return pool[seed % pool.length];
+}
+function sanitizePreferences(value: unknown): KINFTUserPreferences {
+  const raw = value && typeof value === 'object' ? value as Partial<KINFTUserPreferences> : {};
+  const next = { ...DEFAULT_KINFT_PREFERENCES };
+  for (const key of Object.keys(PREFERENCE_OPTIONS) as Array<keyof KINFTUserPreferences>) {
+    const proposed = raw[key];
+    if (proposed && (PREFERENCE_OPTIONS[key] as readonly string[]).includes(proposed)) {
+      // All values are checked against a fixed enum before persistence.
+      (next as Record<string, string>)[key] = proposed;
+    }
+  }
+  return next;
 }
 function safeLoad(storage?: StoragePort): KINFTSnapshot {
   try {
@@ -151,6 +185,7 @@ function safeLoad(storage?: StoragePort): KINFTSnapshot {
       claimedEvents: parsed.claimedEvents.filter((id): id is string => validEvent(id)).slice(-5000),
       equipped,
       essence: Number.isSafeInteger(parsed.essence) ? Math.min(Math.max(0, parsed.essence as number), 1_000_000) : 0,
+      customization: sanitizePreferences(parsed.customization),
     };
   } catch { return emptySnapshot(); }
 }
@@ -217,6 +252,10 @@ export class KINFTVault {
     delete this.data.equipped[kind];
     this.persist();
   }
+  updatePreferences(patch: Partial<KINFTUserPreferences>): void {
+    this.data.customization = sanitizePreferences({ ...this.data.customization, ...patch });
+    this.persist();
+  }
   train(id: string): boolean {
     const item = this.data.items.find(owned => owned.id === id);
     if (!item || item.level >= 20) return false;
@@ -240,9 +279,15 @@ export class KINFTVault {
       const scale = 1 + (item.level - 1) * 0.025;
       for (const key of Object.keys(sums) as Array<keyof KINFTCombatBonuses>) sums[key] += def.attributes[key] * scale;
     }
+    // Combat stances offer bounded, reversible playstyle tradeoffs.
+    switch (this.data.customization.combatStance) {
+      case 'PRECISION': sums.critChancePct += 0.015; sums.attackPct -= 0.02; break;
+      case 'ONSLAUGHT': sums.attackPct += 0.04; sums.defensePct -= 0.03; break;
+      case 'GUARDIAN': sums.defensePct += 0.04; sums.attackPct -= 0.025; break;
+    }
     // Balanced caps prevent collectibles becoming uncapped pay-for-power.
-    sums.attackPct = Math.min(0.30, sums.attackPct);
-    sums.defensePct = Math.min(0.25, sums.defensePct);
+    sums.attackPct = Math.max(-0.05, Math.min(0.30, sums.attackPct));
+    sums.defensePct = Math.max(-0.05, Math.min(0.25, sums.defensePct));
     sums.critChancePct = Math.min(0.15, sums.critChancePct);
     sums.dodgeChancePct = Math.min(0.15, sums.dodgeChancePct);
     return sums;
