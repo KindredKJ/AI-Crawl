@@ -15,6 +15,20 @@ const hasScope = (scope: MindAuthorityScope): boolean =>
   );
 
 /**
+ * Canonical JSON identity: property insertion order is not event content.
+ * Arrays remain ordered and the transport's JSON representation is preserved.
+ */
+const canonicalEventJson = (event: MindEvent): string =>
+  JSON.stringify(event, (_key, value: unknown) => {
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      return Object.fromEntries(
+        Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0),
+      );
+    }
+    return value;
+  });
+
+/**
  * Client-side projection only; input must originate at an authorized gateway.
  * Each ledger is bound to a single exact tenant/world/session/Mind identity.
  */
@@ -41,7 +55,7 @@ export class MindEventLedger {
     const previous = this.byIdempotencyKey.get(received.idempotencyKey);
     if (previous) {
       // A collision is NOT an idempotent retry, even when eventId matches.
-      if (JSON.stringify(previous) !== JSON.stringify(received)) {
+      if (canonicalEventJson(previous) !== canonicalEventJson(received)) {
         throw new Error('idempotency_conflict');
       }
       return { status: 'DUPLICATE', event: structuredClone(previous) };
