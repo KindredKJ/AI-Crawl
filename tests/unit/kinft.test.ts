@@ -87,8 +87,7 @@ test('equipped KINFT bonuses stay bounded; pending Unreal assets never provide b
   const item = vault.awardVictory(event('boss-equipped', { boss: true })).newItem!;
   const def = KINFT_CATALOG.find(entry => entry.id === item.definitionId)!;
   const notEquipped = vault.combatBonuses();
-  assert.ok(notEquipped.attackPct <= 0.0, 'precision stance exchanges damage for accuracy');
-  assert.ok(notEquipped.critChancePct > 0, 'precision stance is active without a KINFT');
+  assert.deepEqual(notEquipped, { attackPct: 0, defensePct: 0, critChancePct: 0, dodgeChancePct: 0 });
   vault.equip(item.id, 1);
   const after = vault.combatBonuses();
   assert.ok(after.attackPct <= 0.3);
