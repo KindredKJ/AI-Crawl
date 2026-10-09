@@ -157,7 +157,7 @@ function sanitizePreferences(value: unknown): KINFTUserPreferences {
     const proposed = raw[key];
     if (proposed && (PREFERENCE_OPTIONS[key] as readonly string[]).includes(proposed)) {
       // All values are checked against a fixed enum before persistence.
-      (next as Record<string, string>)[key] = proposed;
+      (next as unknown as Record<string, string>)[key] = proposed;
     }
   }
   return next;
