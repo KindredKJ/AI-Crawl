@@ -65,7 +65,7 @@ contract MerkDungeon is ERC1155, Ownable2Step, Pausable, ReentrancyGuard {
     function enterFloor(uint256 floorId, bytes32 commandId) external nonReentrant whenNotPaused {
         Floor storage selected = floors[floorId];
         if (!selected.enabled) revert FloorUnavailable(floorId);
-        _consumeCommand(commandId);
+        _consumeCommand(keccak256(abi.encode("ENTER_FLOOR", msg.sender, commandId)), commandId);
 
         uint256 beforeBalance = merk.balanceOf(treasury);
         merk.safeTransferFrom(msg.sender, treasury, selected.entryFee);
@@ -76,7 +76,7 @@ contract MerkDungeon is ERC1155, Ownable2Step, Pausable, ReentrancyGuard {
 
     function dropLoot(address to, uint256 itemId, uint256 amount, bytes32 commandId) external onlyOwner whenNotPaused {
         if (to == address(0) || amount == 0) revert InvalidConfiguration();
-        _consumeCommand(commandId);
+        _consumeCommand(keccak256(abi.encode("DROP_LOOT", to, commandId)), commandId);
         _mint(to, itemId, amount, "");
         emit LootDropped(to, itemId, amount, commandId);
     }
@@ -88,9 +88,11 @@ contract MerkDungeon is ERC1155, Ownable2Step, Pausable, ReentrancyGuard {
     function pause() external onlyOwner { _pause(); }
     function unpause() external onlyOwner { _unpause(); }
 
-    function _consumeCommand(bytes32 commandId) private {
+    // Registry keys include operation and actor so public entry cannot consume
+    // a privileged loot command ID. The raw command ID remains in events.
+    function _consumeCommand(bytes32 scopedKey, bytes32 commandId) private {
         if (commandId == bytes32(0)) revert InvalidConfiguration();
-        if (processedCommands[commandId]) revert DuplicateCommand(commandId);
-        processedCommands[commandId] = true;
+        if (processedCommands[scopedKey]) revert DuplicateCommand(commandId);
+        processedCommands[scopedKey] = true;
     }
 }
