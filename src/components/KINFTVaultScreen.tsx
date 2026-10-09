@@ -19,7 +19,7 @@ const kindIcon = {
 };
 const CUSTOMIZERS: Array<{key: keyof KINFTUserPreferences; title: string; options: string[]; description: string}> = [
   { key: 'shroudPalette', title: 'Shroud palette', options: ['OBSIDIAN', 'EMBER', 'SERAPH', 'VOID'], description: 'Saved look preference for the future Unreal Shroud material' },
-  { key: 'combatStance', title: 'Combat stance', options: ['PRECISION', 'ONSLAUGHT', 'GUARDIAN'], description: 'Active balanced attack, defense and critical-hit tradeoffs' },
+  { key: 'combatStance', title: 'Combat stance', options: ['BALANCED', 'PRECISION', 'ONSLAUGHT', 'GUARDIAN'], description: 'Active balanced attack, defense and critical-hit tradeoffs' },
   { key: 'cameraShake', title: 'Camera impact', options: ['OFF', 'SUBTLE', 'CINEMATIC'], description: 'Saved accessibility and cinematic camera preference' },
   { key: 'presentation', title: 'HUD layout', options: ['IMMERSIVE', 'TACTICAL', 'ACCESSIBLE'], description: 'Saved Unreal HUD profile; native rendering not yet integrated' },
   { key: 'effects', title: 'Visual fidelity', options: ['PERFORMANCE', 'BALANCED', 'CINEMATIC'], description: 'Saved Unreal effects preference; requires native renderer integration' },
