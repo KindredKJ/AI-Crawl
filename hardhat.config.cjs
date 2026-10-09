@@ -6,6 +6,10 @@ const { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } = require('hardhat/builtin-tasks/
 // Pin the npm-distributed compiler so CI builds do not depend on a mutable download endpoint.
 subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async ({ solcVersion }, _hre, runSuper) => {
   if (solcVersion === '0.8.24') {
+    const activeCompiler = require('solc').version();
+    if (!activeCompiler.startsWith('0.8.24+')) {
+      throw new Error(`solc_version_mismatch:configured_0.8.24:installed_${activeCompiler}`);
+    }
     return {
       compilerPath: require.resolve('solc/soljson.js'),
       isSolcJs: true,
