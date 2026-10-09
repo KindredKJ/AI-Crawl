@@ -4,6 +4,7 @@ import {
  type Action, type Tactic,
 } from '../game/covenantDust';
 import { covenantDustSave } from '../game/covenantDustSave';
+import { beginWaveCombat, takeWaveTurn, type WaveBattle, type CombatMove } from '../game/covenantDustCombat';
 
 type Choice = { label:string; action:Action; fields?:Partial<CampaignEvent> };
 const action=(label:string,kind:Action,fields?:Partial<CampaignEvent>):Choice=>
@@ -66,7 +67,16 @@ export const CovenantDustScreen:React.FC=()=>{
  const [tactic,setTactic]=useState<Tactic>('SHROUD');
  useEffect(()=>covenantDustSave.subscribe(setState),[]);
  const enemy=encounter(state);
+ const [battle,setBattle]=useState<WaveBattle|null>(()=>state.stage==='MERCYS_END'?beginWaveCombat(encounter(state)):null);
+ useEffect(()=>{
+  setBattle(state.stage==='MERCYS_END'?beginWaveCombat(encounter(state)):null);
+ },[state.stage,state.wave,enemy.seed]);
  const choices=available(state);
+ function fight(move:CombatMove){
+  if(!battle)return;
+  try{setBattle(takeWaveTurn(battle,move,state.awakenings,state.mounted));setError('');}
+  catch(e){setError(e instanceof Error?e.message:'Invalid tactical move');}
+ }
  function dispatch(next:Choice){
   try{
    covenantDustSave.dispatch({
@@ -117,11 +127,40 @@ export const CovenantDustScreen:React.FC=()=>{
           <option value="COVER">Environmental Cover</option>
           <option value="ALLY">Ally Tactics (proposed)</option>
          </select>
-         <button type="button" onClick={()=>dispatch(action('Resolve locally','RESOLVE_WAVE',{tactic,outcome:'SURVIVED'}))}
-          className="w-full bg-amber-400 text-black font-bold rounded-xl p-3 hover:bg-amber-300">
-          Resolve Wave {state.wave} · Local Simulation
-         </button>
-         <p className="text-xs text-white/40">No server combat verification, actual enemy spawns or paid rewards are asserted.</p>
+         {battle&&<div className="space-y-3" aria-label="Local tactical combat">
+          <div className="flex justify-between text-xs text-white/75">
+           <span>Gunslinger HP {battle.heroHP}/160</span><span>Enemy pressure {battle.enemyHP}</span>
+          </div>
+          <div className="flex justify-between text-xs text-white/60">
+           <span>Shroud {battle.shroudEnergy}/4</span><span>Revolver {battle.ammo}/6</span>
+           <span>Turn {battle.turn}/5+</span>
+          </div>
+          <p className="text-xs text-amber-300">Incoming: {battle.nextThreat.replaceAll('_',' ')}</p>
+          <div className="grid grid-cols-2 gap-2">
+           {([
+            ['SHROUD_BLOCK','Block'],['SHROUD_REDIRECT','Redirect'],
+            ['REVOLVER','Revolver'],['DEAD_EYE','Dead Eye'],
+            ['DODGE','Dodge'],['TAKE_COVER','Take Cover'],
+            ['RIDER_EVADE','Mounted Evasion'],
+           ] as const).map(([move,label])=><button key={move} type="button"
+            disabled={battle.status!=='FIGHTING'} onClick={()=>fight(move)}
+            className="text-left p-2 rounded-lg bg-white/10 border border-white/10 text-sm hover:bg-white/20 disabled:opacity-35">
+            {label}
+           </button>)}
+          </div>
+          <p className="text-xs text-white/65">{battle.journal.at(-1)}</p>
+          {battle.status==='FALLEN'&&<button type="button"
+           className="text-sm text-amber-300 underline" onClick={()=>setBattle(beginWaveCombat(encounter(state)))}>
+           Retry the local encounter
+          </button>}
+          {(battle.status==='SURVIVED'||battle.status==='ROUTED')&&<button type="button"
+           onClick={()=>dispatch(action('Secure Wave','RESOLVE_WAVE',
+             {tactic,outcome:battle.status==='ROUTED'?'ROUTED':'SURVIVED'}))}
+           className="w-full bg-amber-400 text-black font-bold rounded-xl p-3 hover:bg-amber-300">
+           Secure Wave {state.wave} · {battle.status}
+          </button>}
+         </div>}
+         <p className="text-xs text-white/40">Tactical actions affect damage, ammunition, cover and Shroud energy. Local battle results remain untrusted for online rewards.</p>
         </div>}
       </div>
       {error&&<p role="alert" className="text-rose-300 text-sm">{error}</p>}
