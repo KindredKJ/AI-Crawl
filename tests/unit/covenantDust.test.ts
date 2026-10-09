@@ -5,6 +5,7 @@ import {
  type CampaignState, type CampaignEvent, type Action,
 } from '../../src/game/covenantDust';
 import { CovenantDustSave } from '../../src/game/covenantDustSave';
+import campaignManifest from '../../content/canonical-world/covenant-dust.campaign.v1.json';
 
 function act(s:CampaignState,action:Action,extra:Partial<CampaignEvent>={}):CampaignState{
  return transition(s,{id:'local.'+(s.revision+1),revision:s.revision,action,...extra});
@@ -136,4 +137,15 @@ test('authoritative privileges, true origin and unavailable awakenings remain cl
  assert.equal(s.publishingAuthorized,false);
  assert.throws(()=>newCampaign(-1));
  assert.equal(CANON.mystery,'DO NOT KILL THE RIDER');
+});
+
+test('canonical content manifest preserves stage order, rarity and engine responsibility',()=>{
+ assert.equal(campaignManifest.schemaVersion,VERSION);
+ assert.deepEqual(campaignManifest.waveSequence,WAVES);
+ assert.deepEqual(campaignManifest.rarity,RARITIES);
+ assert.deepEqual(campaignManifest.stages.map(s=>s.id),
+  ['DEAD_SKY','COLLAPSE_RUN','MERCYS_END','THE_NOTARY','FIRST_COVENANT_ENDING']);
+ assert.equal(campaignManifest.sixCampaignPhases[2]?.id,'THE MACHINE WAR');
+ assert.equal(campaignManifest.authorityBoundary.localCampaignStateNotTrustedForRewards,true);
+ assert.equal(campaignManifest.player.trueNameRevealed,false);
 });
