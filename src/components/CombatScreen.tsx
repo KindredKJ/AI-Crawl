@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { StatBar } from './StatBar';
 import { gameState } from '../game/gameState';
+import { kinftVault, KINFT_CATALOG } from '../game/kinft';
+import type { KINFTRewardResult } from '../game/kinft';
 import { companionManager, attemptCapture, TYPE_BONUSES } from '../game/companionSystem';
 import { runCombatRound, calcBattleRewards, spawnEnemyFromTemplate, BattleState } from '../game/combatEngine';
 import { getRandomEnemyForLevel, ENEMY_ROSTER } from '../game/enemyRoster';
@@ -33,11 +35,13 @@ export const CombatScreen: React.FC = () => {
     won: boolean; captured: boolean; xp: number; currency: number;
     leveledUp: boolean; newLevel: number; lootItems: { id: string; name: string; quantity: number }[];
     capturedCompanion?: Companion;
+    kinftReward?: KINFTRewardResult;
   } | null>(null);
   const [showAuraEffect, setShowAuraEffect] = useState(false);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const combatActionLocked = useRef(false);
   const roundTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const battleEventRef = useRef<string>('');
 
   useEffect(() => () => {
     if (roundTimerRef.current) clearTimeout(roundTimerRef.current);
@@ -85,6 +89,7 @@ export const CombatScreen: React.FC = () => {
       enemy = spawnEnemyFromTemplate(template, levelMult);
     }
 
+    battleEventRef.current = globalThis.crypto?.randomUUID?.() ?? `local-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setCurrentTemplate(template);
     setCurrentEnemy(enemy);
     setIsBossFight(boss);
@@ -105,15 +110,23 @@ export const CombatScreen: React.FC = () => {
       damageDealt: template.baseHp, damageTaken: player.hp - nextBattle.playerHp,
       kills: won ? 1 : 0, loot: null, lootItems: rewards.lootItems, captured,
     });
+    const kinftReward = kinftVault.awardVictory({
+      eventId: battleEventRef.current,
+      encounterId: template.id,
+      playerLevel: newLevel,
+      totalWins: gameState.get().stats.battlesWon,
+      boss: isBossFight,
+      won,
+    });
     // Give companion XP
     if (activeCompanion) {
       companionManager.addXp(activeCompanion.id, rewards.companionXp);
       if (won) companionManager.recordBattleWin(activeCompanion.id);
     }
     if (player.auraActive) gameState.deactivateAura(30);
-    setResultData({ won, captured, xp: rewards.xpGained, currency: rewards.currencyGained, leveledUp: didLevelUp, newLevel, lootItems: rewards.lootItems, capturedCompanion });
+    setResultData({ won, captured, xp: rewards.xpGained, currency: rewards.currencyGained, leveledUp: didLevelUp, newLevel, lootItems: rewards.lootItems, capturedCompanion, kinftReward });
     setPhase('RESULT');
-  }, [player, zone, activeCompanion]);
+  }, [player, zone, activeCompanion, isBossFight]);
 
   const handleAttack = useCallback(() => {
     if (!battle || !currentEnemy || !currentTemplate || combatActionLocked.current || battle.status !== 'ONGOING') return;
@@ -122,7 +135,7 @@ export const CombatScreen: React.FC = () => {
     roundTimerRef.current = setTimeout(() => {
       roundTimerRef.current = null;
       try {
-        const next = runCombatRound(battle, player, currentEnemy, player.auraActive, activeCompanion);
+        const next = runCombatRound(battle, player, currentEnemy, player.auraActive, activeCompanion, kinftVault.combatBonuses());
         setBattle(next);
         if (next.status !== 'ONGOING') finishBattle(next, currentTemplate);
       } catch (error) {
@@ -455,6 +468,23 @@ export const CombatScreen: React.FC = () => {
                 <div className="text-[9px] font-bold uppercase tracking-widest text-platinum/40 mb-1">Credits</div>
                 <div className="text-2xl font-headline font-black text-gold">+{resultData.currency.toLocaleString()}</div>
               </div>
+            </div>
+          )}
+
+          {/* Earned in-game KINFTs are local reward records, never proof of a blockchain mint. */}
+          {resultData.kinftReward && !resultData.kinftReward.alreadyProcessed && (
+            <div className="w-full max-w-sm border border-violet-400/25 bg-violet-950/20 rounded-2xl p-4 space-y-2">
+              <div className="font-headline uppercase tracking-widest text-[10px] text-violet-300">Kindred KINFT progression</div>
+              <p className="text-sm text-white font-bold">+{resultData.kinftReward.essence} Shroud Essence</p>
+              {resultData.kinftReward.newItem && (() => {
+                const reward = resultData.kinftReward.newItem;
+                const definition = KINFT_CATALOG.find(entry => entry.id === reward.definitionId);
+                return <div className="text-sm text-violet-200">
+                  KINFT UNLOCKED: {definition?.name ?? reward.definitionId}
+                  <div className="text-xs uppercase tracking-wider mt-1">{reward.rarity} · {definition?.kind} · Rank {reward.level}</div>
+                </div>;
+              })()}
+              <p className="text-[10px] text-platinum/50">Earned locally in this game. No on-chain NFT has been minted.</p>
             </div>
           )}
 
