@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Gem, LockKeyhole, Sparkles, Sword, Shield, Users, Zap, Crown, Check } from 'lucide-react';
 import { gameState } from '../game/gameState';
 import { KINFT_CATALOG, KINFT_RARITIES, kinftVault } from '../game/kinft';
-import type { KINFTKind, KINFTRarity } from '../game/kinft';
+import type { KINFTKind, KINFTRarity, KINFTUserPreferences } from '../game/kinft';
 
 const RARITY_GRADIENT: Record<KINFTRarity, string> = {
   COMMON: 'from-slate-500/20 to-slate-900/70 border-slate-500/30',
@@ -16,6 +16,17 @@ const KINDS: readonly KINFTKind[] = ['SKILL','POWER','WEAPON','GEAR','COMPANION'
 const kindIcon = {
   SKILL: Sparkles, POWER: Zap, WEAPON: Sword, GEAR: Shield,
   COMPANION: Users, CHARACTER: Crown,
+};
+const CUSTOMIZERS: Array<{key: keyof KINFTUserPreferences; title: string; options: string[]; description: string}> = [
+  { key: 'shroudPalette', title: 'Shroud palette', options: ['OBSIDIAN', 'EMBER', 'SERAPH', 'VOID'], description: 'Saved look preference for the future Unreal Shroud material' },
+  { key: 'combatStance', title: 'Combat stance', options: ['PRECISION', 'ONSLAUGHT', 'GUARDIAN'], description: 'Active balanced attack, defense and critical-hit tradeoffs' },
+  { key: 'cameraShake', title: 'Camera impact', options: ['OFF', 'SUBTLE', 'CINEMATIC'], description: 'Saved accessibility and cinematic camera preference' },
+  { key: 'presentation', title: 'HUD layout', options: ['IMMERSIVE', 'TACTICAL', 'ACCESSIBLE'], description: 'Saved Unreal HUD profile; native rendering not yet integrated' },
+  { key: 'effects', title: 'Visual fidelity', options: ['PERFORMANCE', 'BALANCED', 'CINEMATIC'], description: 'Saved Unreal effects preference; requires native renderer integration' },
+];
+const PALETTE_BORDER: Record<KINFTUserPreferences['shroudPalette'], string> = {
+  OBSIDIAN: 'border-slate-500/30', EMBER: 'border-orange-500/40',
+  SERAPH: 'border-amber-200/40', VOID: 'border-violet-500/50',
 };
 const percentage = (fraction: number) => `${Math.round(fraction * 1000) / 10}%`;
 
@@ -75,6 +86,30 @@ export const KINFTVaultScreen: React.FC = () => {
         </div>
         <p className="text-xs text-platinum/50">
           Native Unreal powers, characters, animations and mounted abilities still require their authored game assets.
+        </p>
+      </section>
+
+      <section className={`rounded-3xl border p-5 bg-surface-container-low space-y-4 ${PALETTE_BORDER[state.customization.shroudPalette]}`}>
+        <h2 className="text-xl font-headline font-black">YOUR PERSONALIZED RIDER</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {CUSTOMIZERS.map(setting => (
+            <label key={setting.key} className="block space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-platinum/70">{setting.title}</span>
+              <select
+                value={state.customization[setting.key]}
+                onChange={event => kinftVault.updatePreferences({
+                  [setting.key]: event.currentTarget.value,
+                } as Partial<KINFTUserPreferences>)}
+                className="w-full text-white bg-[#181324] border border-violet-300/30 rounded-xl p-3 text-sm">
+                {setting.options.map(option => <option key={option} value={option}>{option}</option>)}
+              </select>
+              <span className="text-[11px] leading-4 block text-platinum/40">{setting.description}</span>
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-platinum/50">
+          Your combat stance changes browser combat now. Other preferences are saved as production contracts
+          for the native Unreal customizer; they do not yet change Unreal rendering.
         </p>
       </section>
 
