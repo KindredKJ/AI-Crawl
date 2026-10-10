@@ -4,7 +4,10 @@ export const AMOY_CHAIN_ID = 80_002;
 
 const DUNGEON_ABI = [
   'function floor(uint256 floorId) view returns (uint128 entryFee, bool enabled, string contentUri)',
-  'function enterFloor(uint256 floorId, bytes32 commandId)',
+  'function enterFloor(uint256 floorId, uint256 maximumFee, bytes32 commandId)',
+] as const;
+const MERK_ALLOWANCE_ABI = [
+  'function allowance(address owner, address spender) view returns (uint256)',
 ] as const;
 
 export interface MerkDeployment {
@@ -15,7 +18,8 @@ export interface MerkDeployment {
 
 export type EntryResult =
   | { status: 'CONFIRMED'; transactionHash: string }
-  | { status: 'UNAVAILABLE'; reason: 'NO_WALLET' | 'WRONG_NETWORK' | 'INVALID_DEPLOYMENT' | 'FLOOR_DISABLED' };
+  | { status: 'APPROVAL_REQUIRED'; tokenAddress: string; spender: string; requiredAmount: bigint; currentAllowance: bigint }
+  | { status: 'UNAVAILABLE'; reason: 'NO_WALLET' | 'WRONG_NETWORK' | 'INVALID_DEPLOYMENT' | 'FLOOR_DISABLED' | 'TRANSACTION_NOT_CONFIRMED' };
 
 export function validateDeployment(value: unknown): value is MerkDeployment {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
@@ -50,8 +54,26 @@ export async function enterMerkFloor(
   const dungeon = new Contract(deployment.contracts.merkDungeon, DUNGEON_ABI, signer);
   const configured = await dungeon.floor(floorId) as [bigint, boolean, string];
   if (!configured[1]) return { status: 'UNAVAILABLE', reason: 'FLOOR_DISABLED' };
-  const transaction = await dungeon.enterFloor(floorId, commandId);
+  const entryFee = configured[0];
+  const dungeonAddress = deployment.contracts.merkDungeon;
+  const merk = new Contract(deployment.contracts.merkToken, MERK_ALLOWANCE_ABI, signer);
+  const currentAllowance = await merk.allowance(await signer.getAddress(), dungeonAddress) as bigint;
+  if (currentAllowance < entryFee) {
+    return {
+      status: 'APPROVAL_REQUIRED',
+      tokenAddress: deployment.contracts.merkToken,
+      spender: dungeonAddress,
+      requiredAmount: entryFee,
+      currentAllowance,
+    };
+  }
+  // Fee is bounded by the wallet's quoted value even if the owner reprices
+  // the floor before this signed transaction is included on chain.
+  const transaction = await dungeon.enterFloor(floorId, entryFee, commandId);
   const receipt = await transaction.wait();
+  if (!receipt || receipt.status !== 1) {
+    return { status: 'UNAVAILABLE', reason: 'TRANSACTION_NOT_CONFIRMED' };
+  }
   return { status: 'CONFIRMED', transactionHash: receipt.hash };
 }
 
