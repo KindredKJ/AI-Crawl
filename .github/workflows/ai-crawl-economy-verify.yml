@@ -12,7 +12,7 @@ on:
       - 'package-lock.json'
       - 'hardhat.config.cjs'
   push:
-    branches: [main]
+    branches: [main, 'codex/deploy-ai-crawl-genesis-dungeon']
 permissions:
   contents: read
 concurrency:
