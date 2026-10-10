@@ -21,9 +21,11 @@ contract MerkDungeon is ERC1155, Ownable2Step, Pausable, ReentrancyGuard {
     IERC20 public immutable merk;
     address public immutable treasury;
     mapping(uint256 floorId => Floor floor) private floors;
+    mapping(uint256 itemId => string contentUri) private lootMetadata;
     mapping(address player => uint256 floorId) public playerFloor;
 
     event FloorConfigured(uint256 indexed floorId, uint256 entryFee, bool enabled, string contentUri);
+    event LootMetadataConfigured(uint256 indexed itemId, string contentUri);
     event FloorEntered(
         address indexed player,
         uint256 indexed floorId,
@@ -34,6 +36,7 @@ contract MerkDungeon is ERC1155, Ownable2Step, Pausable, ReentrancyGuard {
     event LootDropped(address indexed player, uint256 indexed itemId, uint256 amount, bytes32 indexed commandId);
 
     error FloorUnavailable(uint256 floorId);
+    error EntryFeeAboveApprovedMaximum(uint256 actualFee, uint256 maximumFee);
     error InvalidConfiguration();
     error DuplicateCommand(bytes32 commandId);
     error ZeroAddress();
@@ -62,9 +65,10 @@ contract MerkDungeon is ERC1155, Ownable2Step, Pausable, ReentrancyGuard {
         return floors[floorId];
     }
 
-    function enterFloor(uint256 floorId, bytes32 commandId) external nonReentrant whenNotPaused {
+    function enterFloor(uint256 floorId, uint256 maximumFee, bytes32 commandId) external nonReentrant whenNotPaused {
         Floor storage selected = floors[floorId];
         if (!selected.enabled) revert FloorUnavailable(floorId);
+        if (selected.entryFee > maximumFee) revert EntryFeeAboveApprovedMaximum(selected.entryFee, maximumFee);
         _consumeCommand(keccak256(abi.encode("ENTER_FLOOR", msg.sender, commandId)), commandId);
 
         uint256 beforeBalance = merk.balanceOf(treasury);
@@ -74,15 +78,29 @@ contract MerkDungeon is ERC1155, Ownable2Step, Pausable, ReentrancyGuard {
         emit FloorEntered(msg.sender, floorId, selected.entryFee, received, commandId);
     }
 
+    function configureLootMetadata(uint256 itemId, string calldata contentUri) external onlyOwner {
+        if (bytes(contentUri).length == 0) revert InvalidConfiguration();
+        lootMetadata[itemId] = contentUri;
+        emit LootMetadataConfigured(itemId, contentUri);
+    }
+
     function dropLoot(address to, uint256 itemId, uint256 amount, bytes32 commandId) external onlyOwner whenNotPaused {
-        if (to == address(0) || amount == 0) revert InvalidConfiguration();
+        if (to == address(0) || amount == 0 || bytes(lootMetadata[itemId]).length == 0) revert InvalidConfiguration();
         _consumeCommand(keccak256(abi.encode("DROP_LOOT", to, commandId)), commandId);
         _mint(to, itemId, amount, "");
         emit LootDropped(to, itemId, amount, commandId);
     }
 
     function uri(uint256 itemId) public view override returns (string memory) {
-        return floors[itemId].contentUri;
+        return lootMetadata[itemId];
+    }
+
+    function _update(address from, address to, uint256[] memory ids, uint256[] memory values)
+        internal
+        override
+        whenNotPaused
+    {
+        super._update(from, to, ids, values);
     }
 
     function pause() external onlyOwner { _pause(); }
