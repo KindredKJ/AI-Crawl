@@ -26,6 +26,12 @@ public:
     /** Explicit new run is permitted only after this mission is completed. */
     void StartNewRun();
 
+    /** Production HUD interface, visible in packaged native builds. */
+    FString GetNativeObjective() const { return CurrentObjective(); }
+    FString GetNativeStatus() const;
+    FString GetNativeNotice() const { return LastNotice; }
+    float GetNativeIntegrity() const { return Integrity(); }
+
 private:
     UPROPERTY(Transient) TObjectPtr<UKinnullNativeSaveGame> State;
     UPROPERTY(Transient) TArray<TObjectPtr<AKinnullPropActor>> Props;
@@ -39,6 +45,7 @@ private:
     float SaveTimer = 0.0f;
     float HudTimer = 0.0f;
     int32 EventCounter = 0;
+    mutable FString LastNotice = TEXT("Prediction matched reality. Scan the camera to awaken.");
 
     void ResetToInitialState();
     void LoadSavedState();
