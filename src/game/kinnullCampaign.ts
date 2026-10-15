@@ -200,8 +200,10 @@ export function advanceKinnullStory(previous:KinnullStoryState,event:KinnullStor
   if(!selected)throw new Error('Unavailable narrative choice');
   const identity=depositForeignCode(previous.identity,{
     host:selected.host,depth:selected.depth,eventId:event.id,
-    conflict:Math.min(2,selected.conflict),
-    duration:1,resistance:1,
+    conflict:selected.depth==='SURFACE'
+      ?Math.max(0.5,Math.min(2,selected.conflict*0.75))
+      :Math.min(2,selected.conflict),
+    duration:selected.depth==='SURFACE'?0.5:1,resistance:1,
   });
   const next=previous.beat+1;
   const influence={...previous.influence,
