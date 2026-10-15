@@ -10,6 +10,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Math/UnrealMathUtility.h"
 #include "Components/LightComponent.h"
+#include "Components/DirectionalLightComponent.h"
+#include "Components/PointLightComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 namespace Kinnull
 {
@@ -80,6 +83,8 @@ void AKinnullNativeGameMode::SaveProgress()
 {
     if (!State) return;
     State->EventCount = ++EventCounter;
+    if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+        if (APawn* Pawn = PC->GetPawn()) State->LastPlayerLocation = Pawn->GetActorLocation();
     UGameplayStatics::SaveGameToSlot(State, Kinnull::Slot, 0);
 }
 
@@ -119,14 +124,14 @@ void AKinnullNativeGameMode::GenerateFacility()
     Put(EKinnullObject::Camera, 3, 2, 125.f, FVector(0.7f, 0.7f, 1.2f), false);
     Put(EKinnullObject::Relay, 4, 4, 125.f, FVector(0.9f, 0.9f, 1.2f), false);
     InnerGate = Put(EKinnullObject::InnerGate, 6, 3, 130.f,
-                    FVector(2.2f, 0.4f, 3.0f), !State->bInnerGateOpen);
+                    FVector(2.2f, 2.2f, 3.0f), !State->bInnerGateOpen);
     Put(EKinnullObject::Maintenance, 7, 3, 100.f, FVector(0.9f), false);
     Put(EKinnullObject::Security, 9, 5, 120.f, FVector(1.3f), false);
     Put(EKinnullObject::Sentry, 8, 2, 100.f, FVector(0.85f), false);
     Put(EKinnullObject::Sentry, 8, 6, 100.f, FVector(0.85f), false);
     Put(EKinnullObject::UtilityConsole, 9, 7, 110.f, FVector(0.7f, 0.7f, 1.2f), false);
     OuterGate = Put(EKinnullObject::OuterGate, 10, 5, 130.f,
-                    FVector(2.2f, 0.4f, 3.0f), !State->bOuterGateOpen);
+                    FVector(2.2f, 2.2f, 3.0f), !State->bOuterGateOpen);
     Put(EKinnullObject::Exit, 11, 7, 120.f, FVector(1.5f), false);
 
     if (State->bInnerGateOpen && InnerGate) InnerGate->OpenGate();
@@ -256,7 +261,9 @@ void AKinnullNativeGameMode::Interact(AKinnullNativePawn* Player)
             Prop->Kind == EKinnullObject::Wall ||
             Prop->Kind == EKinnullObject::Sentry) continue;
         if ((Prop->Kind == EKinnullObject::InnerGate && State->bInnerGateOpen) ||
-            (Prop->Kind == EKinnullObject::OuterGate && State->bOuterGateOpen)) continue;
+            (Prop->Kind == EKinnullObject::OuterGate && State->bOuterGateOpen) ||
+            (Prop->Kind == EKinnullObject::Camera && State->Phase != EKinnullPhase::Awakening) ||
+            (Prop->Kind == EKinnullObject::Relay && State->Phase != EKinnullPhase::Containment)) continue;
         if ((Prop->Kind == EKinnullObject::Maintenance && State->Host == EKinnullHost::Maintenance) ||
             (Prop->Kind == EKinnullObject::Security && State->Host == EKinnullHost::Security)) continue;
         const float D = FVector::Dist2D(Position, Prop->GetActorLocation());
@@ -408,11 +415,13 @@ void AKinnullNativeGameMode::StartNewRun()
     {
         InnerGate->Mesh->SetVisibility(true);
         InnerGate->Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        InnerGate->Mesh->SetCollisionResponseToAllChannels(ECR_Block);
     }
     if (OuterGate)
     {
         OuterGate->Mesh->SetVisibility(true);
         OuterGate->Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        OuterGate->Mesh->SetCollisionResponseToAllChannels(ECR_Block);
     }
     if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
         if (AKinnullNativePawn* Player = Cast<AKinnullNativePawn>(PC->GetPawn()))
