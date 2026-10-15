@@ -59,7 +59,9 @@ void AKinnullNativeGameMode::LoadSavedState()
         Candidate->CoreVector.Num() != 64 ||
         Candidate->HighestBand < 0 || Candidate->HighestBand > 4 ||
         Candidate->EventCount < 0 || Candidate->EventCount > 200000 ||
-        !Candidate->LastPlayerLocation.IsFinite() ||
+        (!FMath::IsFinite(Candidate->LastPlayerLocation.X) ||
+         !FMath::IsFinite(Candidate->LastPlayerLocation.Y) ||
+         !FMath::IsFinite(Candidate->LastPlayerLocation.Z)) ||
         Candidate->LastPlayerLocation.Z < 0 ||
         Candidate->LastPlayerLocation.X < Kinnull::CellSize ||
         Candidate->LastPlayerLocation.X > 11 * Kinnull::CellSize ||
@@ -216,7 +218,7 @@ void AKinnullNativeGameMode::Notice(const FString& Line, FColor Color) const
 {
     LastNotice = Line;
     if (GEngine) GEngine->AddOnScreenDebugMessage(
-        222, 8.f, Color, Line, true, FVector2D(1.25f));
+        222, 8.f, Color, Line, true, FVector2D(1.25f, 1.25f));
     UE_LOG(LogTemp, Display, TEXT("KINNULL: %s"), *Line);
 }
 
@@ -496,7 +498,7 @@ void AKinnullNativeGameMode::Tick(float DeltaSeconds)
                 State->Host == EKinnullHost::Maintenance ? TEXT("MAINTENANCE") : TEXT("SIGNAL"),
                 State->Hull, State->Focus,
                 bRequestedRecursive ? TEXT("RECURSIVE") : TEXT("SURFACE"));
-            GEngine->AddOnScreenDebugMessage(200, 1.0f, FColor::Cyan, Status, true, FVector2D(1.1f));
+            GEngine->AddOnScreenDebugMessage(200, 1.0f, FColor::Cyan, Status, true, FVector2D(1.1f, 1.1f));
             GEngine->AddOnScreenDebugMessage(201, 1.0f, FColor::Silver,
                 TEXT("WASD move | E interact | Space predict | F toggle possession depth | R new run after completion"));
         }
