@@ -32,7 +32,7 @@ test('foreign code is cumulative, per-axis, irreversible, and event replay is id
   assert.equal(depositForeignCode(first, {
     host: 'SECURITY', depth: 'RECURSIVE', eventId: 'identity.first',
   }), first);
-  const second = depositForeignCode(first, {
+  let second = depositForeignCode(first, {
     host: 'SECURITY', depth: 'RECURSIVE', eventId: 'identity.second',
     resistance: 2, conflict: 2,
   });
