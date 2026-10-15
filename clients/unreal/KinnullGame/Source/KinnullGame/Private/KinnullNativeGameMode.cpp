@@ -1,5 +1,6 @@
 #include "KinnullNativeGameMode.h"
 #include "KinnullNativePawn.h"
+#include "KinnullNativeHUD.h"
 #include "KinnullPropActor.h"
 #include "Engine/Engine.h"
 #include "Engine/DirectionalLight.h"
@@ -27,6 +28,7 @@ AKinnullNativeGameMode::AKinnullNativeGameMode()
 {
     PrimaryActorTick.bCanEverTick = true;
     DefaultPawnClass = AKinnullNativePawn::StaticClass();
+    HUDClass = AKinnullNativeHUD::StaticClass();
     PlayerControllerClass = APlayerController::StaticClass();
 }
 
@@ -193,8 +195,20 @@ FString AKinnullNativeGameMode::CurrentObjective() const
     return TEXT("Unknown phase");
 }
 
+FString AKinnullNativeGameMode::GetNativeStatus() const
+{
+    if (!State) return TEXT("Loading identity...");
+    return FString::Printf(TEXT("IDENTITY %.2f%%  |  BAND %d  |  HOST %s  |  HULL %d  |  FOCUS %d  |  %s"),
+        Integrity(), State->HighestBand,
+        State->Host == EKinnullHost::Security ? TEXT("SECURITY") :
+        State->Host == EKinnullHost::Maintenance ? TEXT("MAINTENANCE") : TEXT("SIGNAL"),
+        State->Hull, State->Focus,
+        bRequestedRecursive ? TEXT("RECURSIVE") : TEXT("SURFACE"));
+}
+
 void AKinnullNativeGameMode::Notice(const FString& Line, FColor Color) const
 {
+    LastNotice = Line;
     if (GEngine) GEngine->AddOnScreenDebugMessage(
         222, 8.f, Color, Line, true, FVector2D(1.25f));
     UE_LOG(LogTemp, Display, TEXT("KINNULL: %s"), *Line);
