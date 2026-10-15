@@ -6,6 +6,7 @@
 #include "KinnullPropActor.generated.h"
 
 class UStaticMeshComponent;
+class UTextRenderComponent;
 
 UCLASS()
 class KINNULLGAME_API AKinnullPropActor : public AActor
@@ -16,6 +17,7 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TObjectPtr<UStaticMeshComponent> Mesh;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) EKinnullObject Kind = EKinnullObject::Floor;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TObjectPtr<UTextRenderComponent> Marker;
 
     void Initialize(EKinnullObject NewKind, const FVector& Position,
                     const FVector& Scale, bool bBlocking);
