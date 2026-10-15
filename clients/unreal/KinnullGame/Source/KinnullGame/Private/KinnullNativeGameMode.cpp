@@ -14,6 +14,7 @@
 #include "Components/DirectionalLightComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/TextRenderComponent.h"
 
 namespace Kinnull
 {
@@ -165,6 +166,11 @@ void AKinnullNativeGameMode::BeginPlay()
 {
     Super::BeginPlay();
     LoadSavedState();
+    // Supply a guaranteed in-world spawn point even when no custom .umap exists.
+    // The saved position is restored after possession once the player controller is available.
+    GetWorld()->SpawnActor<APlayerStart>(
+        APlayerStart::StaticClass(),
+        FTransform(FRotator::ZeroRotator, Grid(2, 2, 145.f)));
     GenerateFacility();
     Notice(TEXT("KINNULL // AWAKENING | W A S D to move, E interact, F switch depth, Space predict."),
            FColor::Cyan);
@@ -430,12 +436,14 @@ void AKinnullNativeGameMode::StartNewRun()
         InnerGate->Mesh->SetVisibility(true);
         InnerGate->Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
         InnerGate->Mesh->SetCollisionResponseToAllChannels(ECR_Block);
+        InnerGate->Marker->SetVisibility(true);
     }
     if (OuterGate)
     {
         OuterGate->Mesh->SetVisibility(true);
         OuterGate->Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
         OuterGate->Mesh->SetCollisionResponseToAllChannels(ECR_Block);
+        OuterGate->Marker->SetVisibility(true);
     }
     if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
         if (AKinnullNativePawn* Player = Cast<AKinnullNativePawn>(PC->GetPawn()))
