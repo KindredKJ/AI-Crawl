@@ -164,10 +164,11 @@ export interface KinnullStoryState {
 const domainOf = (influence:Readonly<Record<ForeignDomain,number>>):KinnullEnding => {
   const order:readonly ForeignDomain[] = ['HUMAN','ROBOT','WEATHER','ALIEN','NANITE'];
   const winner = [...order].sort((a,b)=>influence[b]-influence[a])[0];
-  return {
+  const endings:Record<ForeignDomain,KinnullEnding> = {
     HUMAN:'WITNESS NETWORK',ROBOT:'MACHINE SOVEREIGN',
     WEATHER:'STORM INTELLIGENCE',ALIEN:'ORBITAL COMPOSITE',NANITE:'NANITE LEGION',
-  }[winner];
+  };
+  return endings[winner];
 };
 
 export function newKinnullStory(identity:IdentitySnapshot):KinnullStoryState {
