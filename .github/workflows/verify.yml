@@ -17,4 +17,5 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      - run: node scripts/verify-kinnull-native.mjs
       - run: npm run build
