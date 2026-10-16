@@ -56,5 +56,39 @@ assert.equal(counts.reduce((a,b)=>a+b,0),64);
 assert.match(cmode,/State->HighestBand = FMath::Max/);
 assert.match(read('src/components/KinnullScreen.tsx'),/KinnullCampaignScreen/);
 assert.equal((read('src/game/kinnullCampaign.ts').match(/id:'(?:II|III|IV|V)-/g)??[]).length,12);
+const rig=read(base+'Source/KinnullGame/Private/KinnullProceduralRig.cpp');
+const combat=read(base+'Source/KinnullGame/Private/KinnullCombatEnemy.cpp');
+const pawnUpdated=read(base+'Source/KinnullGame/Private/KinnullNativePawn.cpp');
+const nativeUpdated=read(base+'Source/KinnullGame/Private/KinnullNativeGameMode.cpp');
+for(const variant of ['PredictiveCore','MaintenanceCrawler','SecuritySentinel',
+  'CorporateHandler','DroneSoldier','NaniteDragon'])
+ assert.ok(rig.includes('EKinnullRigRole::'+variant),'Missing character role '+variant);
+for(const animation of ['TriggerPossession','TriggerAttack','TriggerHit','TickComponent'])
+ assert.ok(rig.includes(animation),'Missing native rig animation '+animation);
+for(const combatAbility of ['ReceiveKinnullDamage','AddActorWorldOffset','ApplyEnemyAttack'])
+ assert.ok(combat.includes(combatAbility),'Missing native enemy interaction '+combatAbility);
+for(const source of ['StartCombatWave','FireWeapon','Dodge','PlayVoiceCue','IsCombatActive'])
+ assert.ok(nativeUpdated.includes('::'+source+'('),'Missing native gameplay integration '+source);
+for(const action of ['Fire','Dodge'])
+ assert.ok(ini.includes('ActionName="'+action+'"')&&pawnUpdated.includes('TEXT("'+action+'")'));
+const voice=JSON.parse(read('content/kinnull/voice/manifest.json'));
+assert.equal(voice.lines.length,12);
+assert.ok(voice.lines.some(item=>item.id==='VO_KINNULL_AWAKEN'));
+assert.ok(voice.lines.some(item=>item.id==='VO_KINNULL_ESCAPE'));
+for(const record of voice.lines)
+ assert.match(record.id,/^VO_[A-Z_]+$/);
+assert.ok(read(base+'Source/KinnullGame/Private/KinnullNativeGameMode.cpp').includes('/Game/Kinnull/Voice/'));
+const cinematics=JSON.parse(read('content/kinnull/cinematics/cinematics.v1.json'));
+assert.ok(cinematics.sequences.length>=7);
+const recorded=new Set(voice.lines.map(item=>item.id));
+for(const scene of cinematics.sequences) {
+ assert.ok(scene.shots.length);
+ for(const shot of scene.shots) assert.ok(recorded.has(shot.vo),
+   'Cinematic references an undefined VO cue '+shot.vo);
+}
+assert.ok(read('scripts/Sign-KinnullForStrataCast.ps1').includes('stratacast-native-game.mjs'));
+assert.ok(read('scripts/Build-KinnullNative.ps1').includes('create_kinnull_map.py'));
+assert.ok(read(base+'Source/KinnullGame/Private/KinnullNativePawn.cpp').includes('PlayCinematicBeat'));
+console.log('KINNULL production source contracts OK: six runtime rigs, combat actions, 12 VO cues, seven cinematic storyboards and separate StrataCast native handoff.');
 console.log('KINNULL native source contract OK: 64 axes, five phases, native HUD, input, game actors, save hooks and 12 story encounters.');
 console.log('NOTE: source-level checks do not establish Unreal C++ compilation or successful packaging.');
