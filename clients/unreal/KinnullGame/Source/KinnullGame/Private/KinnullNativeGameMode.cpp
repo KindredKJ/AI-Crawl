@@ -521,3 +521,131 @@ void AKinnullNativeGameMode::Tick(float DeltaSeconds)
         }
     }
 }
+
+
+bool AKinnullNativeGameMode::IsCombatActive() const
+{
+    for (const AKinnullCombatEnemy* Enemy : CombatEnemies)
+        if (IsValid(Enemy) && !Enemy->IsDefeated()) return true;
+    return false;
+}
+void AKinnullNativeGameMode::StartCombatWave(int32 Wave)
+{
+    if (!State || State->Phase == EKinnullPhase::Complete) return;
+    if (Wave == 1 && bCombatActivated) return;
+    if (Wave == 2 && bBossSpawned) return;
+    if (Wave == 1) bCombatActivated = true;
+    if (Wave == 2) bBossSpawned = true;
+    const TArray<FIntPoint> SpawnPoints = Wave == 1
+        ? TArray<FIntPoint>{ FIntPoint(8,2),FIntPoint(8,6) }
+        : TArray<FIntPoint>{ FIntPoint(10,6),FIntPoint(8,6),FIntPoint(9,4) };
+    for (int32 Index = 0; Index < SpawnPoints.Num(); ++Index)
+    {
+        FActorSpawnParameters Params;
+        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        AKinnullCombatEnemy* Enemy = GetWorld()->SpawnActor<AKinnullCombatEnemy>(
+            AKinnullCombatEnemy::StaticClass(),
+            FTransform(FRotator::ZeroRotator,Grid(SpawnPoints[Index].X,SpawnPoints[Index].Y,130.f)),Params);
+        if (Enemy)
+        {
+            Enemy->Initialize(Wave + Index, Wave == 2 && Index == 0);
+            CombatEnemies.Add(Enemy);
+        }
+    }
+    if (Wave == 2)
+    {
+        PlayVoiceCue(TEXT("VO_SECURITY_FIREWALL"));
+        Notice(TEXT("CINEMATIC ENCOUNTER: THE FIREWALL SENTINEL AND ITS GUARDS HAVE ARRIVED."),FColor::Red);
+    }
+    else Notice(TEXT("ARMED PATROL ENGAGED. LMB or gamepad trigger attacks. Shift dodges."),FColor::Yellow);
+}
+void AKinnullNativeGameMode::FireWeapon(AKinnullNativePawn* Player)
+{
+    if (!Player || !State || State->Phase != EKinnullPhase::Escape ||
+        State->Host == EKinnullHost::Signal || PlayerWeaponCooldown > 0.f) return;
+    PlayerWeaponCooldown = State->Host == EKinnullHost::Security ? 0.35f : 0.58f;
+    Player->TriggerCombatAttack();
+    AKinnullCombatEnemy* Target = nullptr;
+    float Best = 1150.f;
+    for (AKinnullCombatEnemy* Enemy : CombatEnemies)
+    {
+        if (!IsValid(Enemy) || Enemy->IsDefeated()) continue;
+        const float Distance = FVector::Dist2D(Player->GetActorLocation(),Enemy->GetActorLocation());
+        if (Distance < Best) { Best = Distance; Target = Enemy; }
+    }
+    if (!Target)
+    {
+        Notice(TEXT("No hostile target within weapon range."),FColor::Yellow);
+        return;
+    }
+    FHitResult WallHit;
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(KinnullWeapon), false,Player);
+    Params.AddIgnoredActor(Target);
+    const FVector Origin = Player->GetActorLocation() + FVector(0,0,75.f);
+    const FVector Endpoint = Target->GetActorLocation() + FVector(0,0,75.f);
+    const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
+        WallHit,Origin,Endpoint,ECC_Visibility,Params) &&
+        IsValid(WallHit.GetActor()) &&
+        WallHit.GetActor()->IsA(AKinnullPropActor::StaticClass()) &&
+        Cast<AKinnullPropActor>(WallHit.GetActor())->Kind == EKinnullObject::Wall;
+    if (bBlocked)
+    {
+        Notice(TEXT("Shot blocked by structural geometry."),FColor::Yellow);
+        return;
+    }
+    const float Power = State->Host == EKinnullHost::Security ?
+        (State->bRecursive ? 55.f : 38.f) : 20.f;
+    const float Applied = Target->ReceiveKinnullDamage(Power);
+    Notice(FString::Printf(TEXT("TARGET HIT: %.0f damage. Host %s."),
+        Applied,State->Host == EKinnullHost::Security ? TEXT("SECURITY") : TEXT("MAINTENANCE")));
+    if (!IsCombatActive())
+    {
+        Notice(State->bOuterGateOpen
+            ? TEXT("ALL HOSTILES DEFEATED. ESCAPE ROUTE CLEAR.")
+            : TEXT("FIRST COMBAT WAVE CLEARED. ADVANCE TO THE OUTER GATE."),FColor::Green);
+    }
+}
+void AKinnullNativeGameMode::Dodge(AKinnullNativePawn* Player)
+{
+    if (!State || !Player || State->Phase != EKinnullPhase::Escape ||
+        State->Host == EKinnullHost::Signal || DodgeImmunity > 0.f) return;
+    DodgeImmunity = .62f;
+    Player->AddActorWorldOffset(Player->GetActorForwardVector() * 190.f,true);
+    Notice(TEXT("DODGE: temporary attack evasion engaged."));
+}
+void AKinnullNativeGameMode::ApplyEnemyAttack(int32 Damage)
+{
+    if (!State || State->Phase != EKinnullPhase::Escape ||
+        State->Host == EKinnullHost::Signal) return;
+    if (DodgeImmunity > 0.f || bPredictionArmed)
+    {
+        bPredictionArmed = false;
+        Notice(TEXT("PREDICTED/DODGED ENEMY ATTACK."));
+        return;
+    }
+    State->Hull = FMath::Max(0,State->Hull - Damage);
+    if (APlayerController* PC = UGameplayStatics::GetPlayerController(this,0))
+        if (AKinnullNativePawn* Player = Cast<AKinnullNativePawn>(PC->GetPawn()))
+            Player->TriggerCombatHit();
+    if (State->Hull == 0)
+    {
+        Erode(State->Host,false,.5f,1.2f,1.f);
+        State->Hull = 3;
+        if (APlayerController* PC = UGameplayStatics::GetPlayerController(this,0))
+            if (APawn* Pawn = PC->GetPawn()) Pawn->SetActorLocation(Grid(7,4,150.f));
+        Notice(TEXT("HOST CRITICAL! Emergency extraction preserved life but damaged original identity."),FColor::Red);
+    }
+    else Notice(FString::Printf(TEXT("HOST DAMAGE. Hull %d."),State->Hull),FColor::Red);
+    SaveProgress();
+}
+void AKinnullNativeGameMode::PlayVoiceCue(const FString& Cue)
+{
+    // A cooked UAsset created from the generated WAV can be played offline.
+    // No network TTS, no runtime external process and no simulated voice success.
+    if (Cue.Len() > 80 || !Cue.StartsWith(TEXT("VO_"))) return;
+    const FString Reference = FString::Printf(
+        TEXT("/Game/Kinnull/Voice/%s.%s"),*Cue,*Cue);
+    if (USoundBase* Sound = LoadObject<USoundBase>(nullptr,*Reference))
+        UGameplayStatics::PlaySound2D(this,Sound);
+    else UE_LOG(LogTemp,Display,TEXT("KINNULL audio asset missing (import voice pack): %s"),*Reference);
+}
