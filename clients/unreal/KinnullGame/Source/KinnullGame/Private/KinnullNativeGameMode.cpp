@@ -1,5 +1,7 @@
 #include "KinnullNativeGameMode.h"
 #include "KinnullNativePawn.h"
+#include "KinnullCombatEnemy.h"
+#include "Sound/SoundBase.h"
 #include "KinnullNativeHUD.h"
 #include "KinnullPropActor.h"
 #include "Engine/Engine.h"
@@ -174,6 +176,9 @@ void AKinnullNativeGameMode::BeginPlay()
         APlayerStart::StaticClass(),
         FTransform(FRotator::ZeroRotator, Grid(2, 2, 145.f)));
     GenerateFacility();
+    if (State->Phase == EKinnullPhase::Escape) StartCombatWave(1);
+    else if (State->Phase == EKinnullPhase::Complete) bCombatActivated = false;
+    PlayVoiceCue(TEXT("VO_KINNULL_AWAKEN"));
     Notice(TEXT("KINNULL // AWAKENING | W A S D to move, E interact, F switch depth, Space predict."),
            FColor::Cyan);
 }
@@ -267,6 +272,9 @@ void AKinnullNativeGameMode::Possess(AKinnullNativePawn* Player, EKinnullHost Ho
     if (Player) Player->DisplayHost(true, Host == EKinnullHost::Security);
     Notice(FString::Printf(TEXT("HOST POSSESSED. Identity: %.2f%%. Band %d. Depth: %s"),
         Integrity(), State->HighestBand, bRequestedRecursive ? TEXT("RECURSIVE") : TEXT("SURFACE")));
+    StartCombatWave(1);
+    if (Player) Player->PlayCinematicBeat(1);
+    PlayVoiceCue(TEXT("VO_KINNULL_POSSESS"));
     SaveProgress();
 }
 
@@ -307,6 +315,8 @@ void AKinnullNativeGameMode::Interact(AKinnullNativePawn* Player)
         {
             State->Phase = EKinnullPhase::Containment;
             Notice(TEXT("THE SIMULATION IS THE REAL WORLD. Containment protocol initiated!"));
+            Player->PlayCinematicBeat(0);
+            PlayVoiceCue(TEXT("VO_KINNULL_REVELATION"));
             SaveProgress();
         }
         break;
@@ -331,7 +341,8 @@ void AKinnullNativeGameMode::Interact(AKinnullNativePawn* Player)
         {
             State->bOuterGateOpen = true;
             if (OuterGate) OuterGate->OpenGate();
-            Notice(TEXT("UTILITY OVERRIDE SUCCESS. No additional identity erosion."));
+            StartCombatWave(2);
+            Notice(TEXT("UTILITY OVERRIDE SUCCESS. Firewall guardian is now active."));
             SaveProgress();
         }
         break;
@@ -342,6 +353,7 @@ void AKinnullNativeGameMode::Interact(AKinnullNativePawn* Player)
         {
             State->bOuterGateOpen = true;
             if (OuterGate) OuterGate->OpenGate();
+            StartCombatWave(2);
             Erode(EKinnullHost::Security, true, .5f, 1.2f, 1.f);
             Notice(FString::Printf(TEXT("FIREWALL ASSIMILATED. Identity %.2f%%. Band %d."),
                 Integrity(), State->HighestBand));
@@ -352,9 +364,12 @@ void AKinnullNativeGameMode::Interact(AKinnullNativePawn* Player)
         break;
     case EKinnullObject::Exit:
         if (State->Phase == EKinnullPhase::Escape &&
-            State->bOuterGateOpen && State->Host != EKinnullHost::Signal)
+            State->bOuterGateOpen && State->Host != EKinnullHost::Signal &&
+            !IsCombatActive())
         {
             State->Phase = EKinnullPhase::Complete;
+            Player->PlayCinematicBeat(2);
+            PlayVoiceCue(TEXT("VO_KINNULL_ESCAPE"));
             Notice(FString::Printf(TEXT("AWAKENING COMPLETE. SURFACE REACHED. Core retained: %.2f%%. Band %d."),
                 Integrity(), State->HighestBand), FColor::Green);
             SaveProgress();
@@ -472,6 +487,8 @@ void AKinnullNativeGameMode::Tick(float DeltaSeconds)
         bRequestedRecursive = State->bRecursive;
         bRestoredPosition = true;
     }
+    DodgeImmunity = FMath::Max(0.f, DodgeImmunity - DeltaSeconds);
+    PlayerWeaponCooldown = FMath::Max(0.f, PlayerWeaponCooldown - DeltaSeconds);
     SentryTimer += DeltaSeconds;
     SaveTimer += DeltaSeconds;
     HudTimer += DeltaSeconds;
