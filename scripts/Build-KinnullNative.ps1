@@ -21,6 +21,27 @@ if ([string]::IsNullOrWhiteSpace($ArchiveDirectory)) {
     $ArchiveDirectory = Join-Path $repo 'build\kinnull-native'
 }
 New-Item -ItemType Directory -Force -Path $ArchiveDirectory | Out-Null
+$editor = Join-Path $EngineRoot 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+if (-not (Test-Path -LiteralPath $editor)) {
+    throw "Unreal Editor command executable not found: $editor"
+}
+$pythonDir = Join-Path $repo 'clients\unreal\KinnullGame\Content\Python'
+$mapScript = Join-Path $pythonDir 'create_kinnull_map.py'
+$voiceScript = Join-Path $pythonDir 'import_kinnull_voices.py'
+if (-not (Test-Path -LiteralPath $mapScript)) { throw "Missing Kinnull native entry-map script: $mapScript" }
+$editorArgs = @($project, '-unattended', '-nop4', '-nullrhi', "-ExecutePythonScript=$mapScript")
+Write-Host "Creating the actual Kinnull Awakening level asset through Unreal Editor..."
+& $editor @editorArgs
+if ($LASTEXITCODE -ne 0) { throw "Unreal level creation failed. Native cook aborted." }
+$voiceRaw = Join-Path $repo 'clients\unreal\KinnullGame\Content\KinnullVoiceRaw'
+if ((Test-Path -LiteralPath $voiceRaw) -and
+  @(Get-ChildItem -LiteralPath $voiceRaw -Filter 'VO_*.wav').Count -gt 0) {
+    Write-Host "Importing Kinnull offline WAV voice assets into cooked SoundWaves..."
+    & $editor $project '-unattended' '-nop4' '-nullrhi' "-ExecutePythonScript=$voiceScript"
+    if ($LASTEXITCODE -ne 0) { throw "Kinnull voice import failed. Cook aborted." }
+} else {
+    Write-Warning "No WAV voice assets found. Build may run silently for missing cues."
+}
 $buildArgs = @(
     'BuildCookRun',
     "-project=$project",
