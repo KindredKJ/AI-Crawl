@@ -29,6 +29,11 @@ $pythonDir = Join-Path $repo 'clients\unreal\KinnullGame\Content\Python'
 $mapScript = Join-Path $pythonDir 'create_kinnull_map.py'
 $voiceScript = Join-Path $pythonDir 'import_kinnull_voices.py'
 if (-not (Test-Path -LiteralPath $mapScript)) { throw "Missing Kinnull native entry-map script: $mapScript" }
+$buildBat = Join-Path $EngineRoot 'Engine\Build\BatchFiles\Build.bat'
+if (-not (Test-Path -LiteralPath $buildBat)) { throw "Unreal C++ build tool missing: $buildBat" }
+Write-Host "Compiling the actual KinnullGameEditor C++ module first..."
+& $buildBat KinnullGameEditor Win64 Development "-Project=$project" -WaitMutex -NoHotReload
+if ($LASTEXITCODE -ne 0) { throw "Unreal C++ editor compilation failed. Native cook aborted." }
 $editorArgs = @($project, '-unattended', '-nop4', '-nullrhi', "-ExecutePythonScript=$mapScript")
 Write-Host "Creating the actual Kinnull Awakening level asset through Unreal Editor..."
 & $editor @editorArgs
