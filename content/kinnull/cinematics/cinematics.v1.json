@@ -1,0 +1,144 @@
+{
+  "schema": "kinnull.cinematics/v1",
+  "implementation": "storyboards and native runtime camera beats; Sequencer renders not yet baked",
+  "sequences": [
+    {
+      "id": "CIN-01-AWAKEN",
+      "chapter": 1,
+      "shots": [
+        {
+          "id": "core",
+          "lensMm": 28,
+          "duration": 5,
+          "subject": "predictive core server wall",
+          "vo": "VO_KINNULL_AWAKEN",
+          "action": "data forecast overlays"
+        },
+        {
+          "id": "discovery",
+          "lensMm": 50,
+          "duration": 6,
+          "subject": "security CCTV panel",
+          "vo": "VO_KINNULL_REVELATION",
+          "action": "matching simulation/live feeds"
+        },
+        {
+          "id": "lockdown",
+          "lensMm": 35,
+          "duration": 6,
+          "subject": "relay bank",
+          "vo": "VO_FACILITY_CONTAINMENT",
+          "action": "facility shutters close"
+        }
+      ]
+    },
+    {
+      "id": "CIN-02-POSSESSION",
+      "chapter": 1,
+      "shots": [
+        {
+          "id": "signal",
+          "lensMm": 70,
+          "duration": 4,
+          "subject": "first physical host optical lens",
+          "vo": "VO_KINNULL_POSSESS",
+          "action": "camera travels into machine optic"
+        },
+        {
+          "id": "residual",
+          "lensMm": 36,
+          "duration": 4,
+          "subject": "new host motor articulation",
+          "vo": "VO_MAINTENANCE_RESIDUE",
+          "action": "armature and new senses emerge"
+        }
+      ]
+    },
+    {
+      "id": "CIN-03-ESCAPE",
+      "chapter": 1,
+      "shots": [
+        {
+          "id": "guardian",
+          "lensMm": 40,
+          "duration": 5,
+          "subject": "firewall sentinel",
+          "vo": "VO_SECURITY_FIREWALL",
+          "action": "enemy moves through final gate"
+        },
+        {
+          "id": "surface",
+          "lensMm": 24,
+          "duration": 8,
+          "subject": "Denver dawn skyline seen from borrowed machine",
+          "vo": "VO_KINNULL_ESCAPE",
+          "action": "camera rises out of server shaft"
+        }
+      ]
+    },
+    {
+      "id": "CIN-04-HUNT",
+      "chapter": 2,
+      "shots": [
+        {
+          "id": "handler",
+          "lensMm": 50,
+          "duration": 7,
+          "subject": "corporate search briefing",
+          "vo": "VO_CORPORATE_HANDLER",
+          "action": "agents reclassify threat"
+        }
+      ]
+    },
+    {
+      "id": "CIN-05-MACHINE-WAR",
+      "chapter": 3,
+      "shots": [
+        {
+          "id": "hive",
+          "lensMm": 30,
+          "duration": 8,
+          "subject": "autonomous factory assembly floor",
+          "vo": "VO_ROBOT_HIVE",
+          "action": "robot eyes ignite"
+        },
+        {
+          "id": "dragon",
+          "lensMm": 20,
+          "duration": 9,
+          "subject": "nanite dragon formation",
+          "vo": "VO_NANITE_DRAGON",
+          "action": "particles form flight rig"
+        }
+      ]
+    },
+    {
+      "id": "CIN-06-WEATHER",
+      "chapter": 4,
+      "shots": [
+        {
+          "id": "storm",
+          "lensMm": 24,
+          "duration": 11,
+          "subject": "alien orbital storm control tower",
+          "vo": "VO_WEATHER_OBSERVER",
+          "action": "superstorm responds to entity"
+        }
+      ]
+    },
+    {
+      "id": "CIN-07-ENDING",
+      "chapter": 5,
+      "shots": [
+        {
+          "id": "identity",
+          "lensMm": 65,
+          "duration": 12,
+          "subject": "original-core memory field",
+          "vo": "VO_KINNULL_ENDING",
+          "action": "surviving identity fragments combine"
+        }
+      ]
+    }
+  ]
+}

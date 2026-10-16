@@ -9,6 +9,7 @@ class UStaticMeshComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UFloatingPawnMovement;
+class UKinnullProceduralRig;
 
 UCLASS()
 class KINNULLGAME_API AKinnullNativePawn : public APawn
@@ -23,6 +24,13 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TObjectPtr<USpringArmComponent> Boom;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TObjectPtr<UCameraComponent> Camera;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TObjectPtr<UFloatingPawnMovement> Movement;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TObjectPtr<UKinnullProceduralRig> AnimatedRig;
+
+    void PlayCinematicBeat(int32 Beat);
+    void EndCinematicBeat();
+    void TriggerCombatAttack();
+    void TriggerCombatHit();
+    void SetRigRoleForHost(bool bHasBody, bool bSecurity);
 
     void DisplayHost(bool bHasBody, bool bSecurity);
 private:
@@ -32,4 +40,9 @@ private:
     void Predict();
     void ToggleDepth();
     void NewRun();
+    void Fire();
+    void Dodge();
+    float CinematicTime = 0.f;
+    int32 CinematicBeat = 0;
+    virtual void Tick(float DeltaSeconds) override;
 };
