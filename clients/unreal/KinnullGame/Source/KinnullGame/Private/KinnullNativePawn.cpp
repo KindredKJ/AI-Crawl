@@ -1,5 +1,6 @@
 #include "KinnullNativePawn.h"
 #include "KinnullNativeGameMode.h"
+#include "KinnullProceduralRig.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -10,7 +11,7 @@
 
 AKinnullNativePawn::AKinnullNativePawn()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
     AutoPossessPlayer = EAutoReceiveInput::Player0;
     Capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("PlayerCollision"));
     Capsule->InitCapsuleSize(42.f, 82.f);
@@ -36,6 +37,9 @@ AKinnullNativePawn::AKinnullNativePawn()
     Movement->MaxSpeed = 470.0f;
     Movement->Acceleration = 2200.0f;
     Movement->Deceleration = 2700.0f;
+    AnimatedRig = CreateDefaultSubobject<UKinnullProceduralRig>(TEXT("KinnullAnimatedCharacter"));
+    AnimatedRig->SetupAttachment(Capsule);
+    Body->SetVisibility(false);
 }
 
 void AKinnullNativePawn::SetupPlayerInputComponent(UInputComponent* Input)
@@ -47,6 +51,8 @@ void AKinnullNativePawn::SetupPlayerInputComponent(UInputComponent* Input)
     Input->BindAction(TEXT("Predict"), IE_Pressed, this, &AKinnullNativePawn::Predict);
     Input->BindAction(TEXT("ToggleDepth"), IE_Pressed, this, &AKinnullNativePawn::ToggleDepth);
     Input->BindAction(TEXT("NewRun"), IE_Pressed, this, &AKinnullNativePawn::NewRun);
+    Input->BindAction(TEXT("Fire"), IE_Pressed, this, &AKinnullNativePawn::Fire);
+    Input->BindAction(TEXT("Dodge"), IE_Pressed, this, &AKinnullNativePawn::Dodge);
 }
 
 void AKinnullNativePawn::Forward(float Axis) { AddMovementInput(FVector::ForwardVector, Axis); }
@@ -74,5 +80,6 @@ void AKinnullNativePawn::NewRun()
 void AKinnullNativePawn::DisplayHost(bool bHasBody, bool bSecurity)
 {
     Body->SetRelativeScale3D(FVector(bHasBody ? (bSecurity ? 1.05f : 0.85f) : 0.40f));
+    SetRigRoleForHost(bHasBody,bSecurity);
     Movement->MaxSpeed = bSecurity ? 580.f : (bHasBody ? 445.f : 470.f);
 }
