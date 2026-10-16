@@ -47,6 +47,16 @@ if ((Test-Path -LiteralPath $voiceRaw) -and
 } else {
     Write-Warning "No WAV voice assets found. Build may run silently for missing cues."
 }
+$rigFolder = Join-Path $repo 'clients\unreal\KinnullGame\Content\KinnullRigRaw'
+$rigImporter = Join-Path $pythonDir 'import_kinnull_rigs.py'
+if ((Test-Path -LiteralPath $rigFolder) -and
+  @(Get-ChildItem -LiteralPath $rigFolder -Filter '*.gltf').Count -gt 0) {
+    Write-Host "Importing six original animated Kinnull rig files into the Unreal project..."
+    & $editor $project '-unattended' '-nop4' '-nullrhi' "-ExecutePythonScript=$rigImporter"
+    if ($LASTEXITCODE -ne 0) { throw "Unreal animated rig import failed. Cook aborted." }
+} else {
+    Write-Warning "No glTF rig pack staged; game will use articulated built-in geometry proxies."
+}
 $buildArgs = @(
     'BuildCookRun',
     "-project=$project",
