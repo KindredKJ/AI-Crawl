@@ -11,7 +11,8 @@ UKinnullProceduralRig::UKinnullProceduralRig()
 
 USceneComponent* UKinnullProceduralRig::Joint(const FName& Name, const FVector& Location)
 {
-    USceneComponent* Node = NewObject<USceneComponent>(GetOwner(), Name);
+    USceneComponent* Node = NewObject<USceneComponent>(GetOwner(),
+        MakeUniqueObjectName(GetOwner(), USceneComponent::StaticClass(), Name));
     Node->SetupAttachment(this);
     Node->SetRelativeLocation(Location);
     Node->RegisterComponent();
