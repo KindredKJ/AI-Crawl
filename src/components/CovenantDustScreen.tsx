@@ -5,6 +5,7 @@ import {
 } from '../game/covenantDust';
 import { covenantDustSave } from '../game/covenantDustSave';
 import { beginWaveCombat, takeWaveTurn, type WaveBattle, type CombatMove } from '../game/covenantDustCombat';
+import { AutonomousPilotPanel } from './AutonomousPilotPanel';
 
 type Choice = { label:string; action:Action; fields?:Partial<CampaignEvent> };
 const action=(label:string,kind:Action,fields?:Partial<CampaignEvent>):Choice=>
@@ -174,6 +175,13 @@ export const CovenantDustScreen:React.FC=()=>{
       </div>}
     </article>
     <aside className="space-y-5">
+     <AutonomousPilotPanel
+      state={state}
+      battle={battle}
+      onCampaignAction={(kind, fields) => dispatch(action(kind.replaceAll('_',' '), kind, fields))}
+      onCombatMove={fight}
+      onRetryBattle={() => setBattle(beginWaveCombat(encounter(state)))}
+     />
      <div className="glass-panel rounded-3xl p-6 space-y-4">
       <h3 className="text-xs text-white/50 uppercase tracking-widest font-bold">Adversary pressure</h3>
       <div className="flex justify-between items-baseline">
