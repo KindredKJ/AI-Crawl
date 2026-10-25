@@ -85,7 +85,7 @@ export function parsePilotMemory(input: unknown): PilotMemory {
   for (const [key, entry] of Object.entries(values)) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return {};
     const value = entry as Record<string, unknown>;
-    if (!Number.isInteger(value.visits) || (value.visits as number) < 1 ||
+    if (typeof value.visits !== 'number' || !Number.isInteger(value.visits) || value.visits < 1 ||
         (value.visits as number) > 10000 ||
         typeof value.meanReward !== 'number' || !Number.isFinite(value.meanReward) ||
         Math.abs(value.meanReward) > 150) return {};
