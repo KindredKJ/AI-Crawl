@@ -6,7 +6,12 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
     groups:
+      capacitor-suite:
+        patterns:
+          - "@capacitor/*"
       minor-and-patch:
+        exclude-patterns:
+          - "@capacitor/*"
         update-types:
           - "minor"
           - "patch"
