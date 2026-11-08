@@ -112,12 +112,17 @@ export async function main() {
     "--no-sandbox","--disable-dev-shm-usage","--window-position=0,0",
     "--window-size=1280,720","--no-first-run","--disable-gpu"]});
   const context=await browser.newContext({viewport:{width:1280,height:720}});
-  await context.addInitScript(({origin,values})=>{
-    if(location.origin===origin)for(const [k,v] of Object.entries(values)) {
-      try { localStorage.setItem(k,v); } catch { /* optional persistence */ }
-    }
-  },{origin:new URL(GAME_URL).origin,values:saved});
   let page=await context.newPage(),encoder=null,encoderRestarts=0,rounds=0,lastUpdate=Date.now();
+  // Restore once, not via addInitScript: injecting the initial save on every navigation
+  // would revert valid progress after a browser reload.
+  if(Object.keys(saved).length>0) {
+    await page.goto(GAME_URL,{waitUntil:"domcontentloaded",timeout:60000});
+    await page.evaluate((values)=>{
+      for(const [key,value] of Object.entries(values)) {
+        try { localStorage.setItem(key,value); } catch { /* optional storage */ }
+      }
+    },saved);
+  }
   let lastState="", lastTurn=0, observedTurns=0, stopping=false;
   const sig=()=>{stopping=true;};
   process.once("SIGTERM",sig);process.once("SIGINT",sig);
