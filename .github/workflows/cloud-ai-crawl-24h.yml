@@ -31,6 +31,48 @@ jobs:
       - run: node --check scripts/cloud-ai-crawl-stream.mjs
       - run: node --test scripts/cloud-ai-crawl-stream.test.mjs
 
+
+  cloud_smoke:
+    name: Real cloud gameplay and FFmpeg dry run
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser and Xvfb capture
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.65.0
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg xvfb
+      - name: Execute real AI gameplay and encode local FLV
+        env:
+          KINDRED_DRY_RUN: "1"
+          KINDRED_END_EPOCH: "0"
+          KINDRED_SEGMENT: "0"
+        run: |
+          set -euo pipefail
+          xvfb-run -a -s "-screen 0 1280x720x24 -ac" node scripts/cloud-ai-crawl-stream.mjs
+          test -s /tmp/kindred-cloud-test.flv
+          ffprobe -v error -show_entries stream=codec_name,width,height -of default=nw=1 /tmp/kindred-cloud-test.flv
+      - name: Retain test footage and gameplay receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-crawl-cloud-gameplay-smoke
+          path: |
+            /tmp/kindred-cloud-test.flv
+            kindred-progress/
+          if-no-files-found: warn
+          retention-days: 2
+
   clock:
     name: Record twenty-four-hour deadline
     if: github.event_name == 'workflow_dispatch'
