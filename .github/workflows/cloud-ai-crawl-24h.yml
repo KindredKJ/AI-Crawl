@@ -1,0 +1,97 @@
+name: AI-Crawl 24h Cloud Broadcast
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Smoke test only (55 seconds, no YouTube)"
+        required: false
+        default: false
+        type: boolean
+  pull_request:
+    paths:
+      - "scripts/cloud-ai-crawl-stream*"
+      - ".github/workflows/cloud-ai-crawl*"
+      - "docs/operations/AI_CRAWL_FREE_CLOUD_BROADCAST.md"
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Controller unit tests
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --check scripts/cloud-ai-crawl-stream.mjs
+      - run: node --test scripts/cloud-ai-crawl-stream.test.mjs
+
+  clock:
+    name: Record twenty-four-hour deadline
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    outputs:
+      deadline: ${{ steps.deadline.outputs.end }}
+    steps:
+      - name: Set absolute UTC end
+        id: deadline
+        run: echo "end=$(( $(date +%s) + 86400 ))" >> "$GITHUB_OUTPUT"
+
+  segment_1:
+    needs: clock
+    uses: ./.github/workflows/cloud-ai-crawl-segment.yml
+    with:
+      segment: 1
+      previous_segment: "none"
+      deadline_epoch: ${{ needs.clock.outputs.deadline }}
+      dry_run: ${{ inputs.dry_run }}
+    secrets: inherit
+
+  segment_2:
+    if: ${{ !inputs.dry_run }}
+    needs: [clock,segment_1]
+    uses: ./.github/workflows/cloud-ai-crawl-segment.yml
+    with:
+      segment: 2
+      previous_segment: "1"
+      deadline_epoch: ${{ needs.clock.outputs.deadline }}
+      dry_run: false
+    secrets: inherit
+
+  segment_3:
+    if: ${{ !inputs.dry_run }}
+    needs: [clock,segment_2]
+    uses: ./.github/workflows/cloud-ai-crawl-segment.yml
+    with:
+      segment: 3
+      previous_segment: "2"
+      deadline_epoch: ${{ needs.clock.outputs.deadline }}
+      dry_run: false
+    secrets: inherit
+
+  segment_4:
+    if: ${{ !inputs.dry_run }}
+    needs: [clock,segment_3]
+    uses: ./.github/workflows/cloud-ai-crawl-segment.yml
+    with:
+      segment: 4
+      previous_segment: "3"
+      deadline_epoch: ${{ needs.clock.outputs.deadline }}
+      dry_run: false
+    secrets: inherit
+
+  segment_5:
+    if: ${{ !inputs.dry_run }}
+    needs: [clock,segment_4]
+    uses: ./.github/workflows/cloud-ai-crawl-segment.yml
+    with:
+      segment: 5
+      previous_segment: "4"
+      deadline_epoch: ${{ needs.clock.outputs.deadline }}
+      dry_run: false
+    secrets: inherit
