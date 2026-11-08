@@ -1,0 +1,70 @@
+name: AI-Crawl 24h Cloud Stream Segment
+on:
+  workflow_call:
+    inputs:
+      segment:
+        required: true
+        type: number
+      previous_segment:
+        required: true
+        type: string
+      deadline_epoch:
+        required: true
+        type: string
+      dry_run:
+        required: true
+        type: boolean
+    secrets:
+      YOUTUBE_STREAM_KEY:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  game:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Restore tactical learning and campaign save
+        if: ${{ inputs.previous_segment != 'none' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: kindred-progress-${{ inputs.previous_segment }}
+          path: kindred-progress
+      - name: Prepare free Linux game and encoder host
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.65.0
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg xvfb
+          node --test scripts/cloud-ai-crawl-stream.test.mjs
+      - name: Run and capture the real autonomous game
+        env:
+          KINDRED_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+          KINDRED_END_EPOCH: ${{ inputs.deadline_epoch }}
+          KINDRED_SEGMENT: ${{ inputs.segment }}
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p kindred-progress
+          timeout --signal=TERM --kill-after=30s 19000s \
+            xvfb-run -a -s "-screen 0 1280x720x24 -ac" \
+            node scripts/cloud-ai-crawl-stream.mjs
+      - name: Save learning state for the next cloud runner
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kindred-progress-${{ inputs.segment }}
+          path: kindred-progress/
+          retention-days: 3
+          if-no-files-found: warn
