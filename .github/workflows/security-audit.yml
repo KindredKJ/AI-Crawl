@@ -1,0 +1,38 @@
+name: AI Crawl Dependency Security Review
+on:
+  push:
+    branches:
+      - "fix/ai-crawl-native-config-audit-20261109"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Print dependency findings and available nonbreaking fixes
+        shell: bash
+        run: |
+          npm audit --json > audit.json || true
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const audit = JSON.parse(readFileSync("audit.json","utf8"));
+            console.log("AUDIT SUMMARY", JSON.stringify(audit.metadata?.vulnerabilities || {}));
+            for (const [name, item] of Object.entries(audit.vulnerabilities || {})) {
+              console.log("VULNERABILITY", JSON.stringify({name,severity:item.severity,isDirect:item.isDirect,via:item.via,range:item.range,nodes:item.nodes,fixAvailable:item.fixAvailable}));
+            }
+          '
+      - name: Confirm native config and production bundle compile
+        run: |
+          npm run lint
+          npm test
+          npm run build
