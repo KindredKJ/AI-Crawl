@@ -1,5 +1,9 @@
 name: AI-Crawl 24h Cloud Broadcast
 on:
+  push:
+    branches: ["launch/ai-crawl-live-20261109"]
+    paths:
+      - ".github/workflows/cloud-ai-crawl-24h.yml"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -75,11 +79,20 @@ jobs:
 
   clock:
     name: Record twenty-four-hour deadline
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-24.04
     outputs:
       deadline: ${{ steps.deadline.outputs.end }}
     steps:
+      - name: Verify live YouTube key before launching
+        if: ${{ github.event_name == 'push' || !inputs.dry_run }}
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: |
+          if [ -z "$YOUTUBE_STREAM_KEY" ]; then
+            echo "::error::No YOUTUBE_STREAM_KEY repository secret configured; live encoder not started."
+            exit 1
+          fi
       - name: Set absolute UTC end
         id: deadline
         run: echo "end=$(( $(date +%s) + 86400 ))" >> "$GITHUB_OUTPUT"
@@ -91,11 +104,11 @@ jobs:
       segment: 1
       previous_segment: "none"
       deadline_epoch: ${{ needs.clock.outputs.deadline }}
-      dry_run: ${{ inputs.dry_run }}
+      dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
     secrets: inherit
 
   segment_2:
-    if: ${{ !inputs.dry_run }}
+    if: ${{ github.event_name == 'push' || !inputs.dry_run }}
     needs: [clock,segment_1]
     uses: ./.github/workflows/cloud-ai-crawl-segment.yml
     with:
@@ -106,7 +119,7 @@ jobs:
     secrets: inherit
 
   segment_3:
-    if: ${{ !inputs.dry_run }}
+    if: ${{ github.event_name == 'push' || !inputs.dry_run }}
     needs: [clock,segment_2]
     uses: ./.github/workflows/cloud-ai-crawl-segment.yml
     with:
@@ -117,7 +130,7 @@ jobs:
     secrets: inherit
 
   segment_4:
-    if: ${{ !inputs.dry_run }}
+    if: ${{ github.event_name == 'push' || !inputs.dry_run }}
     needs: [clock,segment_3]
     uses: ./.github/workflows/cloud-ai-crawl-segment.yml
     with:
@@ -128,7 +141,7 @@ jobs:
     secrets: inherit
 
   segment_5:
-    if: ${{ !inputs.dry_run }}
+    if: ${{ github.event_name == 'push' || !inputs.dry_run }}
     needs: [clock,segment_4]
     uses: ./.github/workflows/cloud-ai-crawl-segment.yml
     with:
