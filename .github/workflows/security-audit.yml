@@ -2,7 +2,10 @@ name: AI Crawl Dependency Security Review
 on:
   push:
     branches:
+      - main
       - "fix/ai-crawl-native-config-audit-20261109"
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -11,14 +14,16 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Block high and critical production dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
       - name: Print dependency findings and available nonbreaking fixes
         shell: bash
         run: |
