@@ -64,7 +64,7 @@ jobs:
           ffprobe -v error -show_entries stream=codec_name,width,height -of default=nw=1 /tmp/kindred-cloud-test.flv
       - name: Retain test footage and gameplay receipts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ai-crawl-cloud-gameplay-smoke
           path: |
