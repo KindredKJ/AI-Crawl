@@ -40,6 +40,11 @@
   filter: drop-shadow(0 0 15px rgba(194, 199, 206, 0.4));
 }
 
+.kinnull-action { display:flex; align-items:center; gap:.7rem; width:100%; border:1px solid rgba(103,232,249,.25); border-radius:.8rem; text-align:left; padding:.85rem 1rem; background:rgba(25,97,109,.22); font-size:.83rem; font-weight:700; }
+.kinnull-action:hover:not(:disabled) { background:rgba(45,169,180,.26); border-color:rgba(103,232,249,.7); }
+.kinnull-action:disabled { opacity:.28; cursor:not-allowed; }
+.kinnull-action:focus-visible { outline:2px solid #67e8f9; outline-offset:2px; }
+
 ::-webkit-scrollbar {
   width: 0px;
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { GameScreen } from '../types';
-import { Home, Map as MapIcon, Sword, BookOpen, Hammer, ShoppingBag, Gem, ScrollText } from 'lucide-react';
+import { Home, Map as MapIcon, Sword, BookOpen, Hammer, ShoppingBag, Gem, ScrollText, Cpu } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface BottomNavProps {
@@ -18,6 +18,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeScreen, onScreenChan
     { id: 'SHOP',     icon: ShoppingBag, label: 'Store' },
     { id: 'KINFT',    icon: Gem,        label: 'KINFT' },
     { id: 'CAMPAIGN', icon: ScrollText, label: 'Story' },
+    { id: 'KINNULL', icon: Cpu, label: 'Kinnull' },
   ] as const;
 
   return (
