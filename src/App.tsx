@@ -10,6 +10,7 @@ import { CraftingScreen } from './components/CraftingScreen';
 import { ShopScreen } from './components/ShopScreen';
 import { KINFTVaultScreen } from './components/KINFTVaultScreen';
 import { CovenantDustScreen } from './components/CovenantDustScreen';
+import { KinnullScreen } from './components/KinnullScreen';
 import { AdDealModal } from './components/AdDealModal';
 import { cloudSync } from './game/cloudSync';
 import { checkPurchaseReturn, applyRewards, verifyPurchase } from './game/iap';
@@ -102,6 +103,7 @@ export default function App() {
       case 'SHOP':     return <ShopScreen key="shop" />;
       case 'KINFT':    return <KINFTVaultScreen key="kinft" />;
       case 'CAMPAIGN': return <CovenantDustScreen key="covenant-dust" />;
+      case 'KINNULL': return <KinnullScreen key="kinnull" />;
       default:         return <CombatScreen key="combat" />;
     }
   };
