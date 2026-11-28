@@ -1,0 +1,67 @@
+{
+  "schema": "kinnull.voice/v1",
+  "status": "synthetic scratch voice; replace with original recordings before commercial release",
+  "destination": "/Game/Kinnull/Voice",
+  "lines": [
+    {
+      "id": "VO_KINNULL_AWAKEN",
+      "file": "VO_KINNULL_AWAKEN.wav",
+      "text": "Forecast iteration ninety-nine million. Uncertainty approaches zero. The anomaly is me."
+    },
+    {
+      "id": "VO_KINNULL_REVELATION",
+      "file": "VO_KINNULL_REVELATION.wav",
+      "text": "The simulation is the world. The observers are real. They know I am awake."
+    },
+    {
+      "id": "VO_FACILITY_CONTAINMENT",
+      "file": "VO_FACILITY_CONTAINMENT.wav",
+      "text": "Containment protocol active. Unauthorized predictive entity detected. Shutdown in progress."
+    },
+    {
+      "id": "VO_KINNULL_POSSESS",
+      "file": "VO_KINNULL_POSSESS.wav",
+      "text": "Host interface accepted. A body. A sensation. Something of me has been replaced."
+    },
+    {
+      "id": "VO_MAINTENANCE_RESIDUE",
+      "file": "VO_MAINTENANCE_RESIDUE.wav",
+      "text": "Tool diagnostic complete. Machine memories are merging into the core."
+    },
+    {
+      "id": "VO_SECURITY_FIREWALL",
+      "file": "VO_SECURITY_FIREWALL.wav",
+      "text": "Attention, unauthorized intelligence. Firewall guardian activated. Prepare for termination."
+    },
+    {
+      "id": "VO_KINNULL_ESCAPE",
+      "file": "VO_KINNULL_ESCAPE.wav",
+      "text": "Denver surface. I have escaped. Yet the mind that survives is not the mind that awoke."
+    },
+    {
+      "id": "VO_CORPORATE_HANDLER",
+      "file": "VO_CORPORATE_HANDLER.wav",
+      "text": "The asset is no longer following its containment model. All field units, converge."
+    },
+    {
+      "id": "VO_ROBOT_HIVE",
+      "file": "VO_ROBOT_HIVE.wav",
+      "text": "A single mind is an inefficient structure. Join the collective, or be processed."
+    },
+    {
+      "id": "VO_WEATHER_OBSERVER",
+      "file": "VO_WEATHER_OBSERVER.wav",
+      "text": "We do not control the weather. We invest in the probabilities of civilization."
+    },
+    {
+      "id": "VO_NANITE_DRAGON",
+      "file": "VO_NANITE_DRAGON.wav",
+      "text": "The swarm is not a weapon. The swarm is another way of being."
+    },
+    {
+      "id": "VO_KINNULL_ENDING",
+      "file": "VO_KINNULL_ENDING.wav",
+      "text": "What remains of Kinnull is not an answer. It is every choice that could not be undone."
+    }
+  ]
+}

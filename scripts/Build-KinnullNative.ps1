@@ -21,6 +21,42 @@ if ([string]::IsNullOrWhiteSpace($ArchiveDirectory)) {
     $ArchiveDirectory = Join-Path $repo 'build\kinnull-native'
 }
 New-Item -ItemType Directory -Force -Path $ArchiveDirectory | Out-Null
+$editor = Join-Path $EngineRoot 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+if (-not (Test-Path -LiteralPath $editor)) {
+    throw "Unreal Editor command executable not found: $editor"
+}
+$pythonDir = Join-Path $repo 'clients\unreal\KinnullGame\Content\Python'
+$mapScript = Join-Path $pythonDir 'create_kinnull_map.py'
+$voiceScript = Join-Path $pythonDir 'import_kinnull_voices.py'
+if (-not (Test-Path -LiteralPath $mapScript)) { throw "Missing Kinnull native entry-map script: $mapScript" }
+$buildBat = Join-Path $EngineRoot 'Engine\Build\BatchFiles\Build.bat'
+if (-not (Test-Path -LiteralPath $buildBat)) { throw "Unreal C++ build tool missing: $buildBat" }
+Write-Host "Compiling the actual KinnullGameEditor C++ module first..."
+& $buildBat KinnullGameEditor Win64 Development "-Project=$project" -WaitMutex -NoHotReload
+if ($LASTEXITCODE -ne 0) { throw "Unreal C++ editor compilation failed. Native cook aborted." }
+$editorArgs = @($project, '-unattended', '-nop4', '-nullrhi', "-ExecutePythonScript=$mapScript")
+Write-Host "Creating the actual Kinnull Awakening level asset through Unreal Editor..."
+& $editor @editorArgs
+if ($LASTEXITCODE -ne 0) { throw "Unreal level creation failed. Native cook aborted." }
+$voiceRaw = Join-Path $repo 'clients\unreal\KinnullGame\Content\KinnullVoiceRaw'
+if ((Test-Path -LiteralPath $voiceRaw) -and
+  @(Get-ChildItem -LiteralPath $voiceRaw -Filter 'VO_*.wav').Count -gt 0) {
+    Write-Host "Importing Kinnull offline WAV voice assets into cooked SoundWaves..."
+    & $editor $project '-unattended' '-nop4' '-nullrhi' "-ExecutePythonScript=$voiceScript"
+    if ($LASTEXITCODE -ne 0) { throw "Kinnull voice import failed. Cook aborted." }
+} else {
+    Write-Warning "No WAV voice assets found. Build may run silently for missing cues."
+}
+$rigFolder = Join-Path $repo 'clients\unreal\KinnullGame\Content\KinnullRigRaw'
+$rigImporter = Join-Path $pythonDir 'import_kinnull_rigs.py'
+if ((Test-Path -LiteralPath $rigFolder) -and
+  @(Get-ChildItem -LiteralPath $rigFolder -Filter '*.gltf').Count -gt 0) {
+    Write-Host "Importing six original animated Kinnull rig files into the Unreal project..."
+    & $editor $project '-unattended' '-nop4' '-nullrhi' "-ExecutePythonScript=$rigImporter"
+    if ($LASTEXITCODE -ne 0) { throw "Unreal animated rig import failed. Cook aborted." }
+} else {
+    Write-Warning "No glTF rig pack staged; game will use articulated built-in geometry proxies."
+}
 $buildArgs = @(
     'BuildCookRun',
     "-project=$project",

@@ -7,6 +7,8 @@
 
 class AKinnullNativePawn;
 class AKinnullPropActor;
+class AKinnullCombatEnemy;
+class USoundBase;
 class ADirectionalLight;
 class ASkyLight;
 
@@ -25,6 +27,10 @@ public:
     void ToggleDepth();
     /** Explicit new run is permitted only after this mission is completed. */
     void StartNewRun();
+    bool IsCombatActive() const;
+    void FireWeapon(AKinnullNativePawn* Player);
+    void Dodge(AKinnullNativePawn* Player);
+    void ApplyEnemyAttack(int32 Damage);
 
     /** Production HUD interface, visible in packaged native builds. */
     FString GetNativeObjective() const { return CurrentObjective(); }
@@ -37,6 +43,13 @@ private:
     UPROPERTY(Transient) TArray<TObjectPtr<AKinnullPropActor>> Props;
     UPROPERTY(Transient) TObjectPtr<AKinnullPropActor> InnerGate;
     UPROPERTY(Transient) TObjectPtr<AKinnullPropActor> OuterGate;
+    UPROPERTY(Transient) TArray<TObjectPtr<AKinnullCombatEnemy>> CombatEnemies;
+    bool bCombatActivated = false;
+    bool bBossSpawned = false;
+    float DodgeImmunity = 0.f;
+    float PlayerWeaponCooldown = 0.f;
+    void StartCombatWave(int32 Wave);
+    void PlayVoiceCue(const FString& Cue);
 
     bool bRestoredPosition = false;
     bool bPredictionArmed = false;
