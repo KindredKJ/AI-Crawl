@@ -10,6 +10,8 @@ import {
   type PossessionDepth,
 } from '../game/kinnullIdentity';
 import { kinnullMissionSave } from '../game/kinnullSave';
+import { KinnullCampaignScreen } from './KinnullCampaignScreen';
+import { KINNULL_STORY_SAVE_KEY } from '../game/kinnullStorySave';
 
 const palette = {
   wall: 'bg-[#080f20] border-[#17233b] text-[#182840]',
@@ -295,12 +297,14 @@ export const KinnullScreen: React.FC = () => {
             <button type="button" className="text-xs text-slate-400 underline underline-offset-4 flex items-center gap-2 mt-5" onClick={() => {
               if (window.confirm('Start a separate new Kinnull run? The identity and progress in this run will be replaced.')) {
                 kinnullMissionSave.newRun();
+                try { window.localStorage.removeItem(KINNULL_STORY_SAVE_KEY); } catch { /* optional storage */ }
                 setError('');
               }
             }}><RotateCcw size={13}/> Start a new campaign run</button>
           </article>
         </div>
       </div>
+      {state.phase === 'COMPLETE' && <KinnullCampaignScreen startingIdentity={state.identity} />}
     </section>
   );
 };

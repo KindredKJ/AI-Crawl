@@ -12,7 +12,8 @@ export const IDENTITY_AXES = [
 ] as const;
 export const IDENTITY_DIMENSIONS = IDENTITY_AXES.reduce((total, axis) => total + axis.count, 0);
 export type IdentityBand = 0 | 1 | 2 | 3 | 4;
-export type HostKind = 'MAINTENANCE' | 'SECURITY';
+export type HostKind = 'MAINTENANCE' | 'SECURITY' | 'HUMAN' | 'ROBOT_NETWORK' |
+  'WEATHER_NODE' | 'ALIEN_UPLINK' | 'NANITE_SWARM';
 export type PossessionDepth = 'SURFACE' | 'RECURSIVE';
 export interface ForeignCodeRecord {
   readonly host: HostKind;
@@ -73,13 +74,21 @@ export function depositForeignCode(previous: IdentitySnapshot, input: ErosionInp
     throw new Error('Invalid identity state or erosion event');
   }
   const intensity = [input.duration ?? 1, input.conflict ?? 1, input.resistance ?? 1];
+  if (!['MAINTENANCE','SECURITY','HUMAN','ROBOT_NETWORK','WEATHER_NODE',
+       'ALIEN_UPLINK','NANITE_SWARM'].includes(input.host) ||
+      (input.depth !== 'SURFACE' && input.depth !== 'RECURSIVE')) {
+    throw new Error('Unsupported foreign-code host or integration depth');
+  }
   if (intensity.some(v => !Number.isFinite(v) || v < 0.5 || v > 2)) {
     throw new Error('Erosion factors must each be between 0.5 and 2');
   }
   if (previous.foreignCode.some(e => e.eventId === input.eventId)) {
     return previous;
   }
-  const baseline = input.host === 'SECURITY' ? 17.5 : 8;
+  const baseline: number = {
+    MAINTENANCE: 8, SECURITY: 17.5, HUMAN: 10, ROBOT_NETWORK: 20,
+    WEATHER_NODE: 24, ALIEN_UPLINK: 28, NANITE_SWARM: 21,
+  }[input.host];
   const depthFactor = input.depth === 'RECURSIVE' ? 1.4 : 1;
   const loss = baseline * depthFactor * intensity.reduce((a, b) => a * b, 1);
   const vector = previous.vector.map((v, i) => round(Math.max(0, v - loss * axisWeights[i]!)));

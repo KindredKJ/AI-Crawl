@@ -14,7 +14,8 @@
     "cap:run": "npx cap run android",
     "android:build": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease",
     "android:bundle": "npm run build && npx cap sync android && cd android && ./gradlew bundleRelease",
-    "test": "tsx --test tests/unit/*.test.ts"
+    "test": "tsx --test tests/unit/*.test.ts",
+    "test:native-source": "node scripts/verify-kinnull-native.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
