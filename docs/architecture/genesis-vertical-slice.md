@@ -46,4 +46,3 @@ The browser is never an authority for identity, entitlement, founder privilege, 
 ## Rollout and rollback
 
 Ship the event contract and read-only projection behind a feature flag. Shadow-consume production-like fixtures, compare legacy and event projections, then enable per tenant. On schema or ordering failure, stop projection at the last valid sequence, surface `UNKNOWN`, emit telemetry, and resume from the signed checkpoint after correction. Rollback disables the adapter; it never rewrites authoritative history.
-

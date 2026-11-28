@@ -1,5 +1,7 @@
 import { PlayerState, Enemy, CombatLog, CombatResult, EnemyTemplate, LootItem } from '../types';
 import { Companion } from '../types';
+import type { KINFTCombatBonuses } from './kinft';
+const NO_KINFT_BONUSES: KINFTCombatBonuses = { attackPct: 0, defensePct: 0, critChancePct: 0, dodgeChancePct: 0 };
 
 const BASE_CRIT_CHANCE = 0.15;
 const BASE_DODGE_CHANCE = 0.08;
@@ -48,7 +50,8 @@ function getCompanionBonuses(companion: Companion | null): {
 export function calcPlayerDamage(
   player: PlayerState,
   auraActive: boolean,
-  companion: Companion | null
+  companion: Companion | null,
+  kinft: KINFTCombatBonuses = NO_KINFT_BONUSES,
 ): { damage: number; isCrit: boolean; abilityUsed: string } {
   const weapon = player.equippedWeapon;
   const base = weapon ? weapon.atk : 500;
@@ -56,11 +59,11 @@ export function calcPlayerDamage(
 
   const levelBonus = 1 + (player.level - 1) * 0.08;
   const auraBonus = auraActive ? (1 + AURA_DAMAGE_BONUS) : 1;
-  const crit = rollCrit(cb.critBonus);
+  const crit = rollCrit(cb.critBonus + kinft.critChancePct);
   const critMult = crit ? 2.0 : 1.0;
   const variance = 0.85 + Math.random() * 0.3;
 
-  const damage = Math.floor((base + cb.atkBonus) * levelBonus * auraBonus * critMult * variance);
+  const damage = Math.floor((base + cb.atkBonus) * levelBonus * auraBonus * critMult * variance * (1 + kinft.attackPct));
 
   const weaponAbilities = ['Primary Strike', 'Charged Shot', 'Precision Burst', 'Overdrive', 'Rapid Fire', 'Power Shot'];
   const abilityUsed = weaponAbilities[Math.floor(Math.random() * weaponAbilities.length)];
@@ -73,18 +76,19 @@ export function calcEnemyDamage(
   playerDef: number,
   entityDef: number,
   auraActive: boolean,
-  companion: Companion | null
+  companion: Companion | null,
+  kinft: KINFTCombatBonuses = NO_KINFT_BONUSES,
 ): { damage: number; dodged: boolean; abilityUsed: string } {
   const cb = getCompanionBonuses(companion);
 
-  if (rollDodge(cb.dodgeBonus)) {
+  if (rollDodge(cb.dodgeBonus + kinft.dodgeChancePct)) {
     return { damage: 0, dodged: true, abilityUsed: '' };
   }
 
   const totalDef = playerDef + entityDef + cb.defBonus;
   const defReduction = Math.min(0.75, totalDef / (totalDef + 800));
   const auraDefBonus = auraActive ? AURA_DEF_BONUS : 0;
-  const effectiveReduction = Math.min(0.85, defReduction + auraDefBonus);
+  const effectiveReduction = Math.min(0.85, defReduction + auraDefBonus + kinft.defensePct);
 
   const angryMult = enemy.isAngry ? (1 + ANGRY_ENEMY_BONUS) : 1;
   const variance = 0.8 + Math.random() * 0.4;
@@ -122,13 +126,14 @@ export function runCombatRound(
   enemy: Enemy,
   auraActive: boolean,
   companion: Companion | null,
+  kinft: KINFTCombatBonuses = NO_KINFT_BONUSES,
 ): BattleState {
   const logs: CombatLog[] = [...battle.rounds];
   let { playerHp, enemyHp, enemyIsAngry } = battle;
   const liveEnemy = enemyIsAngry ? { ...enemy, isAngry: true } : enemy;
 
   // Player attacks
-  const playerAtk = calcPlayerDamage(player, auraActive, companion);
+  const playerAtk = calcPlayerDamage(player, auraActive, companion, kinft);
   enemyHp = Math.max(0, enemyHp - playerAtk.damage);
   logs.push({
     turn: 'PLAYER',
@@ -154,7 +159,7 @@ export function runCombatRound(
 
   // Enemy attacks back
   const entityDef = player.equippedEntity?.def ?? 0;
-  const enemyAtk = calcEnemyDamage(liveEnemy, 0, entityDef, auraActive, companion);
+  const enemyAtk = calcEnemyDamage(liveEnemy, 0, entityDef, auraActive, companion, kinft);
 
   if (enemyAtk.dodged) {
     logs.push({ turn: 'SYSTEM', message: `🌀 Evaded! ${enemy.name}'s attack missed`, damage: 0, isCrit: false });

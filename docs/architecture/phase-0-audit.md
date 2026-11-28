@@ -1,6 +1,6 @@
 # Phase 0 repository and truth audit
 
-**Audit date:** 2026-08-03  
+**Audit date:** 2026-08-03
 **Scope:** tracked source, configuration, deployment functions, Android wrapper, and product documentation.
 
 ## Current state

@@ -30,7 +30,7 @@ export const CraftingScreen: React.FC = () => {
 
   useEffect(() => gameState.subscribe(setPlayer), []);
 
-  const materials = player.inventory.materials ?? {};
+  const materials: Record<string, number> = player.inventory.materials ?? {};
 
   const filtered = RECIPES.filter(r => filter === 'ALL' || r.type === filter);
 

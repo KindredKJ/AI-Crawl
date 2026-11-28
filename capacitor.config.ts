@@ -4,7 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.neoapps.aicrawl',
   appName: 'AI Crawl',
   webDir: 'dist',
-  bundledWebRuntime: false,
   android: {
     buildOptions: {
       keystorePath: 'android/app/keystore.jks',

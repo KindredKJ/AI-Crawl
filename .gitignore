@@ -2,11 +2,11 @@ node_modules/
 build/
 dist/
 coverage/
-artifacts/
-cache/
-deployments/
-android/.gradle/
 .DS_Store
 *.log
 .env*
 !.env.example
+artifacts/
+cache/
+deployments/
+android/.gradle/

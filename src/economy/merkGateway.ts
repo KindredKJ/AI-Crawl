@@ -76,4 +76,3 @@ export async function enterMerkFloor(
   }
   return { status: 'CONFIRMED', transactionHash: receipt.hash };
 }
-
