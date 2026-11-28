@@ -55,7 +55,7 @@ export const CraftingScreen: React.FC = () => {
     }, 800);
   };
 
-  const totalMaterials = Object.values(materials).reduce((a, b) => a + b, 0);
+  const totalMaterials = Object.values(materials as Record<string, number>).reduce((a, b) => a + b, 0);
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-24 pb-32 space-y-6">
